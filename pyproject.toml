@@ -2,9 +2,21 @@
 name = "geojson-aoi-parser"
 version = "0.2.0"
 description = "Parse and normalize a GeoJSON area of interest, using pure Python."
+authors = [
+    {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
+]
 readme = "README.md"
 license = {text = "GPL-3.0-only"}
 requires-python = ">=3.10"
+keywords = ["geojson", "aoi", "parser", "normalize", "hotosm"]
+classifiers = [
+    "Topic :: Utilities",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = []
 
 [dependency-groups]
