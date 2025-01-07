@@ -1,0 +1,31 @@
+# Copyright (c) Humanitarian OpenStreetMap Team
+# This file is part of geojson-aoi-parser.
+#
+#     geojson-aoi-parser is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     geojson-aoi-parser is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
+#
+
+services:
+  aoi-parser:
+    image: "ghcr.io/hotosm/geojson-aoi-parser:${TAG_OVERRIDE:-ci}"
+    build:
+      target: ci
+    container_name: aoi-parser
+    volumes:
+      # Mount local package
+      - ./geojson_aoi:/opt/python/lib/python3.10/site-packages/geojson_aoi
+      # Mount local tests
+      - ./tests:/data/tests
+    network_mode: none
+    restart: "unless-stopped"
+    command: "pytest"

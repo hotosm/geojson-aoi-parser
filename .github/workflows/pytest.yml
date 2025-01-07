@@ -1,16 +1,19 @@
-# name: 🧪 PyTest
+name: 🧪 PyTest
 
-# on:
-#   push:
-#     branches: [main]
-#   # Run tests on PR, prior to merge to main & development
-#   pull_request:
-#     branches: [main]
-#   # Allow manual trigger (workflow_dispatch)
-#   workflow_dispatch:
+on:
+  push:
+    branches: [main]
+  # Run tests on PR, prior to merge to main & development
+  pull_request:
+    branches: [main]
+  # Allow manual trigger (workflow_dispatch)
+  workflow_dispatch:
 
-# jobs:
-#   pytest:
-#     uses: hotosm/gh-workflows/.github/workflows/test_pytest.yml@2.0.5
-#     with:
-#       image_name: ghcr.io/${{ github.repository }}
+jobs:
+  pytest:
+    uses: hotosm/gh-workflows/.github/workflows/test_compose.yml@2.0.9
+    with:
+      image_name: ghcr.io/${{ github.repository }}
+      tag_override: ci
+      compose_service: aoi-parser
+      compose_command: pytest
