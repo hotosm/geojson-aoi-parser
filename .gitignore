@@ -18,6 +18,7 @@ NEWS
 # Python builds
 build
 dist
+*.egg-info
 
 # Docs
 site

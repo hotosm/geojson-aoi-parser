@@ -239,8 +239,8 @@ def merge_polygons(
     or convex hull (for disjoint polygons).
 
     Args:
-        featcol: a FeatureCollection containing geometries.
-        dissolve_polygon: True to dissolve polygons to single polygon.
+        featcol (FeatureCollection): a FeatureCollection containing geometries.
+        dissolve_polygon (bool): True to dissolve polygons to single polygon.
 
     Returns:
         FeatureCollection: a FeatureCollection of a single Polygon.
@@ -283,6 +283,12 @@ def geojson_to_featcol(geojson_obj: dict) -> FeatureCollection:
 
     The type check is done directly from the GeoJSON to allow parsing
     from different upstream libraries (e.g. geojson_pydantic).
+
+    Args:
+        geojson_obj (dict): a parsed geojson, to wrap in a FeatureCollection.
+
+    Returns:
+        FeatureCollection: a FeatureCollection.
     """
     geojson_type = geojson_obj.get("type")
 
@@ -302,7 +308,16 @@ def geojson_to_featcol(geojson_obj: dict) -> FeatureCollection:
 def parse_aoi(
     geojson_raw: str | bytes | dict, merge: bool = False
 ) -> FeatureCollection:
-    """Parse a GeoJSON file or data struc into a normalized FeatureCollection."""
+    """Parse a GeoJSON file or data struc into a normalized FeatureCollection.
+
+    Args:
+        geojson_raw (str | bytes | dict): GeoJSON file path, JSON string, dict,
+            or file bytes.
+        merge (bool): If any nested Polygons / MultiPolygon should be merged.
+
+    Returns:
+        FeatureCollection: a FeatureCollection.
+    """
     # Parse different input types
     if isinstance(geojson_raw, bytes):
         geojson_parsed = json.loads(geojson_raw)
