@@ -34,11 +34,11 @@ def test_polygon_with_holes(polygon_holes_geojson):
 
 
 def test_polygon_merge_with_holes(polygon_holes_geojson):
-    """A single Polygon with holes, should be merged."""
+    """A single Polygon with holes, where the holes should be removed."""
     result = parse_aoi(polygon_holes_geojson, merge=True)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
-    # We have the single exterior ring remaining
+    # As we specify 'merge', only the exterior ring should be remaining
     assert len(result["features"][0]["geometry"]["coordinates"]) == 1
 
 
@@ -219,7 +219,10 @@ def test_multipolygon_no_merge(multipolygon_geojson):
 
 
 def test_multipolygon_with_holes(multipolygon_holes_geojson):
-    """MultiPolygon --> Polygon, with no holes."""
+    """MultiPolygon --> Polygon, with holes remaining."""
+    # FIXME this should not removed the holes from the polygon geom
+    # FIXME Instead the polygon should simply be extrated from the MultiPolygon
+    # FIXME (we only remove holes if merge=True)
     result = parse_aoi(multipolygon_holes_geojson)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 3
