@@ -3,10 +3,14 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
-AllowedInputTypes = Literal[
-    "Polygon", "MultiPolygon", "Feature", "FeatureCollection", "GeometryCollection"
+AllowedInputTypes = [
+    "Polygon",
+    "MultiPolygon",
+    "Feature",
+    "FeatureCollection",
+    "GeometryCollection",
 ]
 Coordinate = float | int
 PointGeom = tuple[Coordinate, Coordinate]
@@ -113,8 +117,8 @@ def _multigeom_to_singlegeom(featcol: FeatureCollection) -> FeatureCollection:
 
 
 def _ensure_right_hand_rule(
-    coordinates: list[list[PointGeom]],
-) -> list[list[PointGeom]]:
+    coordinates: PolygonGeom,
+) -> PolygonGeom:
     """Ensure the outer ring follows the right-hand rule (clockwise)."""
 
     def is_clockwise(ring: list[PointGeom]) -> bool:
@@ -136,7 +140,7 @@ def _ensure_right_hand_rule(
     return coordinates
 
 
-def _create_convex_hull(polygons: list[list[PointGeom]]) -> list[PointGeom]:
+def _create_convex_hull(polygons: PolygonGeom) -> list[PointGeom]:
     """Create a convex hull from a list of polygons."""
     from itertools import chain
 
@@ -314,9 +318,16 @@ def parse_aoi(
     else:
         raise ValueError("GeoJSON input must be a valid dict, str, or bytes")
 
+    print(geojson_parsed)
+    print("type" in geojson_parsed)
+
     # Throw error if no data
-    if geojson_parsed is None or geojson_parsed == {}:
+    if geojson_parsed is None or geojson_parsed == {} or "type" not in geojson_parsed:
         raise ValueError("Provided GeoJSON is empty")
+
+    # Throw error if wrong geometry type
+    if geojson_parsed["type"] not in AllowedInputTypes:
+        raise ValueError(f"The GeoJSON type must be one of: {AllowedInputTypes}")
 
     # Convert to FeatureCollection
     featcol = geojson_to_featcol(geojson_parsed)

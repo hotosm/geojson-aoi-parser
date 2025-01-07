@@ -183,6 +183,9 @@ def test_invalid_input():
     with pytest.raises(ValueError, match="Provided GeoJSON is empty"):
         parse_aoi("{}")
 
+    with pytest.raises(ValueError, match="The GeoJSON type must be one of:"):
+        parse_aoi({"type": "Point"})
+
 
 def test_file_input(tmp_path):
     """GeoJSON file input for parse_aoi function."""
