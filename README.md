@@ -9,10 +9,10 @@
 </p>
 <p align="center">
   <a href="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/docs.yml" target="_blank">
-      <img src="https://github.com/hotosm/geojson-aoi-parser/workflows/Publish Docs/badge.svg" alt="Publish Docs">
+      <img src="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/docs.yml/badge.svg" alt="Publish Docs">
   </a>
   <a href="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/publish.yml" target="_blank">
-      <img src="https://github.com/hotosm/geojson-aoi-parser/workflows/Publish to PyPi.org/badge.svg" alt="Publish">
+      <img src="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/publish.yml/badge.svg" alt="Publish">
   </a>
   <a href="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/pytest.yml" target="_blank">
       <img src="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/pytest.yml/badge.svg?branch=main" alt="Test">
@@ -27,6 +27,9 @@
       <img src="https://img.shields.io/github/license/hotosm/geojson-aoi-parser.svg" alt="License">
   </a>
 </p>
+
+
+
 
 ---
 
