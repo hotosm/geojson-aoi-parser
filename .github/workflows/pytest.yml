@@ -15,5 +15,6 @@ jobs:
     with:
       image_name: ghcr.io/${{ github.repository }}
       tag_override: ci
+      compose_file: compose.yml
       compose_service: aoi-parser
       compose_command: pytest
