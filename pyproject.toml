@@ -1,6 +1,6 @@
 [project]
 name = "geojson-aoi-parser"
-version = "0.1.0"
+version = "0.2.0"
 description = "Parse and normalize a GeoJSON area of interest, using pure Python."
 readme = "README.md"
 license = {text = "GPL-3.0-only"}
@@ -48,7 +48,7 @@ testpaths = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0"
+version = "0.2.0"
 version_files = [
     "pyproject.toml:version",
     "geojson_aoi/__version__.py",
