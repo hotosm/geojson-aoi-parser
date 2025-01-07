@@ -28,9 +28,6 @@
   </a>
 </p>
 
-
-
-
 ---
 
 📖 **Documentation**: <a href="https://hotosm.github.io/geojson-aoi-parser/" target="_blank">https://hotosm.github.io/geojson-aoi-parser/</a>
@@ -75,3 +72,35 @@
 >
 > In this scenario, we support stripping out the first geometry from inside
 > each GeometryCollection object (that may be nested in a FeatureCollection).
+
+## Capturing The Warnings
+
+If the GeoJSON has an invalid CRS, or coordinates seem off, a warning
+will be raised.
+
+To halt execution when a warning is raised and act on it:
+
+```python
+try:
+    featcol = parse_aoi(raw_geojson)
+except UserWarning as warning:
+    log.error(warning.message)
+    msg = "Using a valid CRS is mandatory!"
+    log.error(msg)
+    raise HTTPException(HTTPStatus.BAD_REQUEST, detail=msg)
+```
+
+To record warnings, but allow execution to continue:
+
+```python
+import warnings
+
+with warnings.catch_warnings(record=True) as recorded_warnings:
+    featcol = parse_aoi(raw_geojson)
+
+if recorded_warnings:
+    for warning in recorded_warnings:
+        if isinstance(warning.message, UserWarning)
+            # do stuff with warning
+            logger.warning(f"A warning was encountered: {warning.message}")
+```
