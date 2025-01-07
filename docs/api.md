@@ -1,13 +1,9 @@
-# API Docs for osm-rawdata
-
-## Main Functions
+# API Docs
 
 ::: geojson_aoi.parser.parse_aoi
 options:
 show_source: false
 heading_level: 3
-
-## Helper Functions
 
 ::: geojson_aoi.parser.geojson_to_featcol
 options:
