@@ -1,0 +1,43 @@
+[project]
+name = "geojson-aoi-parser"
+version = "0.1.0"
+description = "Parse and normalize a GeoJSON area of interest, using pure Python."
+readme = "README.md"
+license = {text = "GPL-3.0-only"}
+requires-python = ">=3.10"
+dependencies = []
+
+[dependency-groups]
+test = [
+    "pytest>=8.3.4",
+]
+
+[tool.ruff]
+fix = true
+line-length = 88
+target-version = "py310"
+exclude = [
+    ".ruff_cache",
+    "geojson_aoi/__version__.py",
+]
+[tool.ruff.lint]
+select = ["I", "E", "W", "D", "B", "F", "N", "Q"]
+ignore = ["N805", "B008"]
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+version_files = [
+    "pyproject.toml:version",
+    "geojson_aoi/__version__.py",
+]
+changelog_file = "CHANGELOG.md"
+update_changelog_on_bump = true
