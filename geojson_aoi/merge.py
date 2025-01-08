@@ -40,9 +40,7 @@ def merge_polygons(featcol: FeatureCollection) -> FeatureCollection:
         for i, p1 in enumerate(polygons)
         for p2 in polygons[i + 1 :]
     ):
-        merged_coordinates = _create_convex_hull(
-            list(chain.from_iterable(chain.from_iterable(polygons)))
-        )
+        merged_coordinates = _create_convex_hull(list(chain.from_iterable(polygons)))
     else:
         merged_coordinates = _create_unary_union(polygons)
 
