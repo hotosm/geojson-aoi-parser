@@ -36,7 +36,7 @@ def merge_polygons(featcol: FeatureCollection) -> FeatureCollection:
     polygons = [_ensure_right_hand_rule(polygon[0]) for polygon in polygons]
 
     if all(
-        _polygons_disjoint(p1[0], p2[0])
+        _polygons_disjoint(p1, p2)
         for i, p1 in enumerate(polygons)
         for p2 in polygons[i + 1 :]
     ):
@@ -62,7 +62,6 @@ def _ensure_right_hand_rule(
     """Ensure the outer ring follows the right-hand rule (clockwise)."""
 
     def is_clockwise(ring: list[PointCoords]) -> bool:
-        """Check coords are in clockwise direction."""
         return (
             sum(
                 (ring[i][0] - ring[i - 1][0]) * (ring[i][1] + ring[i - 1][1])
@@ -80,11 +79,11 @@ def _ensure_right_hand_rule(
             f"of [x, y] points. Got: {coordinates[0]}"
         )
 
-    # Ensure the first ring is the exterior ring and follows clockwise direction
+    # Ensure the first ring is clockwise
     if not is_clockwise(coordinates[0]):
         coordinates[0] = coordinates[0][::-1]
 
-    # Ensure any holes follow counter-clockwise direction
+    # Ensure holes are counter-clockwise
     for i in range(1, len(coordinates)):
         if is_clockwise(coordinates[i]):
             coordinates[i] = coordinates[i][::-1]
@@ -170,13 +169,100 @@ def _polygons_disjoint(poly1: list[list[float]], poly2: list[list[float]]) -> bo
     return True
 
 
-def _create_unary_union(polygons: list[list[list[float]]]) -> list[list[list[float]]]:
+class LineString:
+    def __init__(self, coordinates: list[list[float]]):
+        self.coordinates = coordinates
+
+    def is_closed(self) -> bool:
+        return self.coordinates[0] == self.coordinates[-1]
+
+    def winding_order(self) -> str:
+        # Calculate signed area to determine winding order
+        area = 0
+        for i in range(len(self.coordinates) - 1):
+            x1, y1 = self.coordinates[i]
+            x2, y2 = self.coordinates[i + 1]
+            area += (x2 - x1) * (y2 + y1)
+        return "clockwise" if area > 0 else "counterclockwise"
+
+
+class Polygon:
+    def __init__(self, exterior: LineString, interiors: list[LineString] = None):
+        self.exterior = exterior
+        self.interiors = interiors or []
+
+    def rings(self):
+        yield self.exterior
+        yield from self.interiors
+
+
+class MultiPolygon:
+    def __init__(self, polygons: list[Polygon]):
+        self.polygons = polygons
+
+    def rings(self):
+        for polygon in self.polygons:
+            yield from polygon.rings()
+
+
+class BooleanOpsCoord:
+    def __init__(self, coord):
+        self.coord = coord
+
+
+def ring_to_shape_path(line_string: LineString) -> list[BooleanOpsCoord]:
+    if not line_string.is_closed():
+        raise ValueError("LineString must be closed.")
+
+    coords = line_string.coordinates[
+        :-1
+    ]  # Skip the last coordinate for implicit closure
+    return [BooleanOpsCoord(coord) for coord in coords]
+
+
+def multi_polygon_from_shapes(shapes: list[list[list[float]]]) -> dict:
+    feature_collection = {"type": "FeatureCollection", "features": []}
+
+    for shape in shapes:
+        # Ensure the first and last points are the same for each linear ring
+        for ring in shape:
+            if ring[0] != ring[-1]:
+                ring.append(ring[0])
+
+        feature_collection["features"].append(
+            {
+                "type": "Feature",
+                "geometry": {"type": "Polygon", "coordinates": shape},
+                "properties": {},
+            }
+        )
+
+    return feature_collection
+
+
+def _create_unary_union(boppables: list[Polygon | MultiPolygon]) -> dict:
     """Create a unary union from a list of polygons.
 
     This merges the polygons by their boundaries exactly.
     Most appropriate when the boundaries are touching (not disjoint).
     """
-    # Pure Python union implementation is non-trivial, so this is simplified:
-    # Merge all coordinates into a single outer ring.
-    all_points = chain.from_iterable(polygon[0] for polygon in polygons)
-    return [list(set(all_points))]
+    subject = []
+
+    for boppable in boppables:
+        for ring in boppable.rings():
+            subject.append(ring_to_shape_path(ring))
+
+    # Placeholder: Replace FloatOverlay and overlay logic with actual implementation
+    fill_rule = (
+        "positive"
+        if all(
+            ring.winding_order() == "clockwise"
+            for boppable in boppables
+            for ring in boppable.rings()
+        )
+        else "negative"
+    )
+
+    shapes = [[[coord.coord for coord in path] for path in subject]]
+
+    return multi_polygon_from_shapes(shapes)
