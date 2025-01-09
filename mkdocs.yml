@@ -1,5 +1,5 @@
 site_name: geojson-aoi-parser
-site_description: Parse and normalize a GeoJSON area of interest, using pure Python.
+site_description: Parse and normalize a GeoJSON area of interest, using PostGIS.
 # strict: true
 site_url: "https://www.hotosm.org"
 

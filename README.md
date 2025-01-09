@@ -2,10 +2,10 @@
 
 <!-- markdownlint-disable -->
 <p align="center">
-  <img src="https://github.com/hotosm/fmtm/blob/main/images/hot_logo.png?raw=true" style="width: 200px;" alt="HOT"></a>
+  <img src="https://raw.githubusercontent.com/hotosm/geojson-aoi-parser/refs/heads/main/docs/images/hot_logo.png" style="width: 200px;" alt="HOT"></a>
 </p>
 <p align="center">
-  <em>Parse and normalize a GeoJSON area of interest, using pure Python.</em>
+  <em>Parse and normalize a GeoJSON area of interest, using using PostGIS.</em>
 </p>
 <p align="center">
   <a href="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/docs.yml" target="_blank">
@@ -54,24 +54,15 @@
 - **Flexible geometry input**:
   - Polygon
   - MultiPolygons
+  - GeometryCollection
   - Feature
   - FeatureCollection
 - Handle multigeometries with an optional merge to single polygon, or split into
   featcol of individual polygons.
-- Handle geometries nested inside GeometryCollection*.
+- Handle geometries nested inside GeometryCollection.
 - Remove any z-dimension coordinates.
 - Warn user if CRS is provided, in a coordinate system other than EPSG:4326.
 - **Normalised output**: FeatureCollection containing Polygon geoms.
-
-> [!WARNING]  
-> *We typically advise against using the GeometryCollection type, and support
-> in this library may not be fully functional.
->
-> However sometimes geometries may need to be returned wrapped in
-> GeometryCollection, for example due to idiosyncrasies of PostGIS.
->
-> In this scenario, we support stripping out the first geometry from inside
-> each GeometryCollection object (that may be nested in a FeatureCollection).
 
 ## Capturing The Warnings
 
@@ -104,3 +95,15 @@ if recorded_warnings:
             # do stuff with warning
             logger.warning(f"A warning was encountered: {warning.message}")
 ```
+
+## History
+
+- Initially I tried to write a pure-Python implementation of this, no dependencies.
+- I underestimated the amount of work that is! It could be possible to reverse
+  engineer C++ Geos or georust/geos, but it's more hassle than it's worth.
+- As all of the target install candidates for this package use a db driver
+  anyway, I thought it wisest (and most time efficient) to use the PostGIS
+  Geos implementation (specifically for the unary_union and convex_hull
+  algorithms).
+- An additional advantage is the potential to port this to PGLite when the
+  PostGIS extension is available, meaning AOI processing easily in the browser.

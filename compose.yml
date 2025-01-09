@@ -15,8 +15,12 @@
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
 
+networks:
+  net:
+    name: aoi-parser
+
 services:
-  aoi-parser:
+  parser:
     image: "ghcr.io/hotosm/geojson-aoi-parser:${TAG_OVERRIDE:-ci}"
     build:
       target: ci
@@ -26,6 +30,29 @@ services:
       - ./geojson_aoi:/opt/python/lib/python3.10/site-packages/geojson_aoi
       # Mount local tests
       - ./tests:/data/tests
-    network_mode: none
-    restart: "unless-stopped"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - net
+    restart: "no"
     command: "pytest"
+
+  db:
+    image: "postgis/postgis:17-3.5-alpine"
+    container_name: aoi-parser-db
+    environment:
+      - POSTGRES_USER=aoi
+      - POSTGRES_PASSWORD=dummycipassword
+      - POSTGRES_DB=aoi
+    ports:
+      - "5439:5432"
+    networks:
+      - net
+    restart: "unless-stopped"
+    healthcheck:
+      test: pg_isready -U ${FMTM_DB_USER:-aoi} -d ${FMTM_DB_NAME:-aoi}
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3

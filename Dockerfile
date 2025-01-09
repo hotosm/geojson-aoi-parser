@@ -70,6 +70,7 @@ RUN apt-get update --quiet \
     apt-get install -y --quiet --no-install-recommends \
         "build-essential" \
         "gcc" \
+        "libpq-dev" \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=uv /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock README.md /_lock/
@@ -103,6 +104,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+RUN apt-get update --quiet \
+    && DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --quiet --no-install-recommends \
+        "postgresql-client" \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 # Copy Python deps from build to runtime
 COPY --from=build /opt/python /opt/python
 WORKDIR /data

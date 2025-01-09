@@ -1,7 +1,7 @@
 [project]
 name = "geojson-aoi-parser"
 version = "0.2.0"
-description = "Parse and normalize a GeoJSON area of interest, using pure Python."
+description = "Parse and normalize a GeoJSON area of interest, using PostGIS."
 authors = [
     {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
 ]
@@ -17,7 +17,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    "psycopg>=3.1",
+]
 
 [dependency-groups]
 test = [

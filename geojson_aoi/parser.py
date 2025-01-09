@@ -1,3 +1,20 @@
+# Copyright (c) Humanitarian OpenStreetMap Team
+# This file is part of geojson-aoi-parser.
+#
+#     geojson-aoi-parser is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     geojson-aoi-parser is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
+#
+
 """Parse various AOI GeoJSON formats and normalize."""
 
 import json
@@ -5,9 +22,10 @@ import logging
 import warnings
 from pathlib import Path
 
-from geojson_aoi.merge import merge_polygons
-from geojson_aoi.normalize import normalize_featcol
-from geojson_aoi.types import FeatureCollection
+from psycopg import Connection
+
+from geojson_aoi.postgis import PostGis
+from geojson_aoi.types import Feature, FeatureCollection, GeoJSON
 
 AllowedInputTypes = [
     "Polygon",
@@ -20,20 +38,20 @@ AllowedInputTypes = [
 log = logging.getLogger(__name__)
 
 
-def check_crs(featcol: FeatureCollection) -> None:
+def check_crs(geojson: GeoJSON) -> None:
     """Warn the user if an invalid CRS is detected.
 
     Also does a rough check for one geometry, to determine if the
     coordinates are range 90/180 degree range.
 
     Args:
-        featcol (FeatureCollection): a FeatureCollection.
+        geojson (GeoJSON): a GeoJSON.
 
     Returns:
-        FeatureCollection: a FeatureCollection.
+        None
     """
 
-    def is_valid_crs(crs_name):
+    def is_valid_crs(crs_name: str) -> bool:
         valid_crs_list = [
             "urn:ogc:def:crs:OGC:1.3:CRS84",
             "urn:ogc:def:crs:EPSG::4326",
@@ -41,78 +59,66 @@ def check_crs(featcol: FeatureCollection) -> None:
         ]
         return crs_name in valid_crs_list
 
-    def is_valid_coordinate(coord):
-        if coord is None:
-            return False
-        return -180 <= coord[0] <= 180 and -90 <= coord[1] <= 90
+    def is_valid_coordinate(coord: list[float]) -> bool:
+        return len(coord) == 2 and -180 <= coord[0] <= 180 and -90 <= coord[1] <= 90
 
-    if "crs" in featcol:
-        crs = featcol.get("crs", {}).get("properties", {}).get("name")
-        if not is_valid_crs(crs):
-            warning_msg = (
-                "Unsupported coordinate system, it is recommended to use a "
-                "GeoJSON file in WGS84(EPSG 4326) standard."
-            )
-            log.warning(warning_msg)
-            warnings.warn(UserWarning(warning_msg), stacklevel=2)
-
-    features = featcol.get("features", [])
-    coordinates = (
-        features[-1].get("geometry", {}).get("coordinates", []) if features else []
-    )
-
-    first_coordinate = None
-    if coordinates:
-        while isinstance(coordinates, list):
-            first_coordinate = coordinates
-            coordinates = coordinates[0]
-
-    if not is_valid_coordinate(first_coordinate):
+    crs = geojson.get("crs", {}).get("properties", {}).get("name")
+    if crs and not is_valid_crs(crs):
         warning_msg = (
-            "The coordinates within the GeoJSON file are not valid. "
-            "Is the file empty?"
+            "Unsupported coordinate system. Use WGS84 (EPSG 4326) for best results."
         )
         log.warning(warning_msg)
         warnings.warn(UserWarning(warning_msg), stacklevel=2)
 
+    geom = geojson.get("geometry") or geojson.get("features", [{}])[-1].get(
+        "geometry", {}
+    )
+    coordinates = geom.get("coordinates", [])
 
-def geojson_to_featcol(geojson_obj: dict) -> FeatureCollection:
-    """Enforce GeoJSON is wrapped in FeatureCollection.
+    # Drill down into nested coordinates to find the first coordinate
+    while isinstance(coordinates, list) and len(coordinates) > 0:
+        coordinates = coordinates[0]
 
-    The type check is done directly from the GeoJSON to allow parsing
-    from different upstream libraries (e.g. geojson_pydantic).
+    if not is_valid_coordinate(coordinates):
+        warning_msg = "Invalid coordinates in GeoJSON. Ensure the file is not empty."
+        log.warning(warning_msg)
+        warnings.warn(UserWarning(warning_msg), stacklevel=2)
+
+
+def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[GeoJSON]:
+    """Remove FeatureCollection and Feature wrapping.
 
     Args:
-        geojson_obj (dict): a parsed geojson, to wrap in a FeatureCollection.
+        geojson_obj (dict): a parsed geojson.
 
     Returns:
-        FeatureCollection: a FeatureCollection.
+        list[GeoJSON]: a list of geometries.
     """
+    # FIXME possibly add logic to retain and existing properties?
+
+    if geojson_obj.get("crs"):
+        # Warn the user if invalid CRS detected
+        check_crs(geojson_obj)
+
     geojson_type = geojson_obj.get("type")
-    geojson_crs = geojson_obj.get("crs")
 
     if geojson_type == "FeatureCollection":
-        log.debug("Already in FeatureCollection format, reparsing")
-        features = geojson_obj.get("features", [])
+        geoms = [feature["geometry"] for feature in geojson_obj.get("features", [])]
     elif geojson_type == "Feature":
-        log.debug("Converting Feature to FeatureCollection")
-        features = [geojson_obj]
+        geoms = [geojson_obj.get("geometry")]
     else:
-        log.debug("Converting Geometry to FeatureCollection")
-        features = [{"type": "Feature", "geometry": geojson_obj, "properties": {}}]
+        geoms = [geojson_obj]
 
-    featcol = {"type": "FeatureCollection", "features": features}
-    if geojson_crs:
-        featcol["crs"] = geojson_crs
-    return featcol
+    return geoms
 
 
 def parse_aoi(
-    geojson_raw: str | bytes | dict, merge: bool = False
+    db: str | Connection, geojson_raw: str | bytes | dict, merge: bool = False
 ) -> FeatureCollection:
     """Parse a GeoJSON file or data struc into a normalized FeatureCollection.
 
     Args:
+        db (str | Connection): Existing db connection, or connection string.
         geojson_raw (str | bytes | dict): GeoJSON file path, JSON string, dict,
             or file bytes.
         merge (bool): If any nested Polygons / MultiPolygon should be merged.
@@ -143,14 +149,9 @@ def parse_aoi(
     if geojson_parsed["type"] not in AllowedInputTypes:
         raise ValueError(f"The GeoJSON type must be one of: {AllowedInputTypes}")
 
-    # Convert to FeatureCollection
-    featcol = geojson_to_featcol(geojson_parsed)
-    if not featcol.get("features", []):
-        raise ValueError("Failed parsing geojson")
+    # Extract from FeatureCollection
+    geoms = strip_featcol(geojson_parsed)
 
-    # Warn the user if invalid CRS detected
-    check_crs(featcol)
-
-    if not merge:
-        return normalize_featcol(featcol)
-    return merge_polygons(normalize_featcol(featcol))
+    with PostGis(db, geoms, merge) as result:
+        print(result.featcol)
+        return result.featcol
