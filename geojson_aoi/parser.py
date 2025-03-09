@@ -129,6 +129,7 @@ def parse_aoi(
     # Parse different input types
     if isinstance(geojson_raw, bytes):
         geojson_parsed = json.loads(geojson_raw)
+
     if isinstance(geojson_raw, str):
         if Path(geojson_raw).exists():
             log.debug(f"Parsing geojson file: {geojson_raw}")
@@ -136,6 +137,7 @@ def parse_aoi(
                 geojson_parsed = json.load(geojson_file)
         else:
             geojson_parsed = json.loads(geojson_raw)
+
     elif isinstance(geojson_raw, dict):
         geojson_parsed = geojson_raw
     else:

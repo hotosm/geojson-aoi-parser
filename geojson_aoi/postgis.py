@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from psycopg import Connection, connect
 
-from geojson_aoi.types import GeoJSON
+from geojson_aoi.types import GeoJSON, FeatureCollection
 
 log = logging.getLogger(__name__)
 
@@ -74,8 +74,21 @@ class Normalize:
         value_string = ", ".join(values)
         return f"""
             INSERT INTO "{table_id}" (geometry)
-            VALUES {value_string};
+            VALUES ({value_string});
         """
+
+    @staticmethod
+    def queryAsFeatureCollection(table_id: str) -> FeatureCollection:
+        """Build the query string to get all of our geometries into a nice FeatureCollection."""
+
+        #val = f'SELECT geometry FROM "{table_id}";'
+        val = f"""SELECT json_build_object(
+                    'type', 'FeatureCollection',
+                    'features', json_agg(ST_AsGeoJSON(t.*)::json)
+                    )
+                FROM "{table_id}" as t(id, geom);"""
+
+        return val
 
 
 class Merge:
@@ -117,6 +130,10 @@ class PostGis:
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
+            #print(query(cur, f'SELECT ST_AsText(geometry) FROM "{self.table_id}";'))
+            cur.execute(self.normalize.queryAsFeatureCollection(self.table_id))
+            print(cur.fetchall())
+            
             # if self.merge:
             #     cur.execute(self.merge.unary_union(self.geoms, self.table_id))
         return self
@@ -159,6 +176,17 @@ class PostGis:
             # Only close the connection if it was newly created
             if self.is_new_connection:
                 self.connection.close()
+
+def query(cursor: any, msg: str) -> str:
+        """
+        Ask the database a for some data.
+
+        This is mostly intended for debugging. Not intended return our Normalized FeatureCollection.
+
+        Precondition: Need an initialized Connection.Cursor() object.
+        """
+        cursor.execute(msg)
+        return cursor.fetchall()
 
 
 class PostGisAsync:
