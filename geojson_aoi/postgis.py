@@ -131,8 +131,9 @@ class PostGis:
             cur.execute(self.normalize.init_table(self.table_id))
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
             cur.execute(self.normalize.queryAsFeatureCollection(self.table_id))
-            print(cur.fetchall())
             
+            self.featcol = cur.fetchall()[0][0]
+
             # if self.merge:
             #     cur.execute(self.merge.unary_union(self.geoms, self.table_id))
         return self
