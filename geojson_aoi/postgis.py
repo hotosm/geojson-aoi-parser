@@ -130,7 +130,6 @@ class PostGis:
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
-            #print(query(cur, f'SELECT ST_AsText(geometry) FROM "{self.table_id}";'))
             cur.execute(self.normalize.queryAsFeatureCollection(self.table_id))
             print(cur.fetchall())
             
@@ -176,18 +175,6 @@ class PostGis:
             # Only close the connection if it was newly created
             if self.is_new_connection:
                 self.connection.close()
-
-def query(cursor: any, msg: str) -> str:
-        """
-        Ask the database a for some data.
-
-        This is mostly intended for debugging. Not intended return our Normalized FeatureCollection.
-
-        Precondition: Need an initialized Connection.Cursor() object.
-        """
-        cursor.execute(msg)
-        return cursor.fetchall()
-
 
 class PostGisAsync:
     """An asynchronous database connection.
