@@ -46,7 +46,7 @@ class Normalize:
         """
 
     @staticmethod
-    def insert(geoms: list[GeoJSON], table_id: str) -> str:
+    def insert(geoms: list[GeoJSON], table_id: str, merge: bool) -> str:
         """Insert geometries into db, normalising where possible."""
         values = []
         for geom in geoms:
@@ -69,6 +69,12 @@ class Normalize:
             if geom.get("type") == "Polygon" or geom.get("type") == "MultiPolygon":
                 val = f"ST_ForcePolygonCW({val})"
 
+            # TODO: Consider doing merge here rather than in it's own class
+            # NOTE: I think this won't work since I need the geometries in the database to do the conditionals
+            #if(merge):
+            #    # do merge
+            #    val = "CASE WHEN ST_Overlaps"
+
             values.append(val)
 
         value_string = ", ".join(values)
@@ -81,7 +87,6 @@ class Normalize:
     def queryAsFeatureCollection(table_id: str) -> FeatureCollection:
         """Build the query string to get all of our geometries into a nice FeatureCollection."""
 
-        #val = f'SELECT geometry FROM "{table_id}";'
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
@@ -89,21 +94,29 @@ class Normalize:
                 FROM "{table_id}" as t(id, geom);"""
 
         return val
+    
+    @staticmethod
+    def merge(geoms: list[GeoJSON], table_id: str) -> str:
+        """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
+        then return that string."""
 
+        # TODO: Make postgres function to:
+        # - SELECT all geoms
+        # - Run each valid pair of results through ST_Overlaps? -> ST_Unary_Union
+        # - Remove entry left behind
+        # - Take care to not compare the same values twice
+        val = """SELECT * FROM "{table_id}", 
+                CASE WHEN ST_Overlaps """
+        # geom needs to actually be in the database for me to operate on it.
+        
 
-class Merge:
-    """Merge polygons.
+        #IF ST_Overlaps then
+        #self.unary_union(geoms, table_id)
 
-    - MultiPolygon to a single Polygon.
-    - Remove interior rings from all polygons (holes).
+        #if ST_Disjoint then
+        #self.convex_hull
 
-    Automatically determine whether to use union (for overlapping polygons)
-    or convex hull (for disjoint polygons).
-    """
-
-    pass
-    # ST_UnaryUnion
-    # ST_ConvexHull
+        return val
 
 
 class PostGis:
@@ -121,21 +134,22 @@ class PostGis:
         self.featcol = None
 
         self.normalize = Normalize()
-        if merge:
-            self.merge = Merge()
+        self.merge = merge
 
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
         self.create_connection()
+
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
-            cur.execute(self.normalize.insert(self.geoms, self.table_id))
+            cur.execute(self.normalize.insert(self.geoms, self.table_id, self.merge))
+
+            if self.merge:
+                cur.execute(self.normalize.merge(self.geoms, self.table_id))
+
             cur.execute(self.normalize.queryAsFeatureCollection(self.table_id))
-            
             self.featcol = cur.fetchall()[0][0]
 
-            # if self.merge:
-            #     cur.execute(self.merge.unary_union(self.geoms, self.table_id))
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
