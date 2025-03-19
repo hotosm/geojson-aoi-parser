@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from psycopg import Connection, connect
 
-from geojson_aoi.types import GeoJSON, FeatureCollection
+from geojson_aoi.types import FeatureCollection, GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class Normalize:
 
             # TODO: Consider doing merge here rather than in it's own class
             # NOTE: I think this won't work since I need the geometries in the database to do the conditionals
-            #if(merge):
+            # if(merge):
             #    # do merge
             #    val = "CASE WHEN ST_Overlaps"
 
@@ -86,7 +86,6 @@ class Normalize:
     @staticmethod
     def queryAsFeatureCollection(table_id: str) -> FeatureCollection:
         """Build the query string to get all of our geometries into a nice FeatureCollection."""
-
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
@@ -94,12 +93,12 @@ class Normalize:
                 FROM "{table_id}" as t(id, geom);"""
 
         return val
-    
+
     @staticmethod
     def merge(geoms: list[GeoJSON], table_id: str) -> str:
         """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
-        then return that string."""
-
+        then return that string.
+        """
         # TODO: Make postgres function to:
         # - SELECT all geoms
         # - Run each valid pair of results through ST_Overlaps? -> ST_Unary_Union
@@ -108,13 +107,12 @@ class Normalize:
         val = """SELECT * FROM "{table_id}", 
                 CASE WHEN ST_Overlaps """
         # geom needs to actually be in the database for me to operate on it.
-        
 
-        #IF ST_Overlaps then
-        #self.unary_union(geoms, table_id)
+        # IF ST_Overlaps then
+        # self.unary_union(geoms, table_id)
 
-        #if ST_Disjoint then
-        #self.convex_hull
+        # if ST_Disjoint then
+        # self.convex_hull
 
         return val
 
@@ -190,6 +188,7 @@ class PostGis:
             # Only close the connection if it was newly created
             if self.is_new_connection:
                 self.connection.close()
+
 
 class PostGisAsync:
     """An asynchronous database connection.
