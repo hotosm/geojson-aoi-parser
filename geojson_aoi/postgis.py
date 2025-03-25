@@ -105,51 +105,8 @@ class Normalize:
         # - Run each valid pair of results through ST_Overlaps? -> ST_Unary_Union
         # - Remove entry left behind
         # - Take care to not compare the same values twice
-
-        # - SELECT all geoms
-        val = f"""
-            CREATE OR REPLACE FUNCTION merge_overlaps() RETURNS SETOF "{table_id}" AS
-            $BODY$
-            DECLARE
-                i "{table_id}"%rowtype;
-                j "{table_id}"%rowtype;
-            BEGIN
-
-                FOR i IN
-                    SELECT * FROM "{table_id}"
-                LOOP
-                    FOR j IN
-                        SELECT * FROM "{table_id}"
-                    LOOP
-                        
-                        --UPDATE "{table_id}" 
-                        --SET geometry = ST_UnaryUnion( ST_Collect(i.geometry, j.geometry))
-                        --WHERE ST_Overlaps(i.geometry, j.geometry);
-
-                        UPDATE "{table_id}"
-                        SET geometry = ST_ConvexHull( ST_Collect( i.geometry, j.geometry))
-                        WHERE ST_Disjoint(i.geometry, j.geometry);
-
-                        --DELETE FROM "{table_id}" WHERE id = j
-                        --IF ST_Overlaps(i.geometry, j.geometry) THEN
-                        --    
-                        --    PERFORM ST_UnaryUnion( ST_Collect(i.geometry, j.geometry));
-                        --END IF;
-
-                        RETURN NEXT j;
-                    END LOOP;
-                
-                    RETURN NEXT i;
-                END LOOP;
-                RETURN;
-            END;
-            $BODY$
-            LANGUAGE plpgsql;
-
-            SELECT * FROM merge_overlaps();
-            """
         
-        val2 = f"""
+        val = f"""
             CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
             $BODY$
             DECLARE
@@ -173,15 +130,8 @@ class Normalize:
 
             SELECT * FROM merge_disjoints();
         """
-        # geom needs to actually be in the database for me to operate on it.
 
-        #IF ST_Overlaps then
-        #self.unary_union(geoms, table_id)
-
-        #if ST_Disjoint then
-        #self.convex_hull
-
-        return val2
+        return val
     
 class PostGis:
     """A synchronous database connection.
