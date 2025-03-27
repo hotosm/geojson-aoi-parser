@@ -132,8 +132,8 @@ class Normalize:
         """
         
         val2 = f"""
-            SELECT * FROM {table_id} a
-            INNER JOIN {table_id} b ON
+            SELECT * FROM "{table_id}" a
+            INNER JOIN "{table_id}" b ON
                 (a.geometry && b.geometry AND ST_Overlaps(a.geometry, b.geometry))
             WHERE a.id != b.id;
         """

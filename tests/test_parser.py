@@ -42,6 +42,12 @@ def test_polygon_merge_with_holes(db, polygon_holes_geojson):
     assert len(result["features"][0]["geometry"]["coordinates"]) == 1
 
 
+def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
+    "Merge overlapping polygons within multipolygon"
+    result = parse_aoi(db, polygon_overlaps_geojson, merge=True)
+    assert len(result["features"]) == 1
+
+
 def test_z_dimension_polygon(db, polygon_geojson):
     """A single Polygon, with z-dimension coord stripped out."""
     geojson_data = {
