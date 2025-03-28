@@ -43,7 +43,7 @@ def test_polygon_merge_with_holes(db, polygon_holes_geojson):
 
 
 def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
-    "Merge overlapping polygons within multipolygon"
+    """Merge overlapping polygons within multipolygon"""
     result = parse_aoi(db, polygon_overlaps_geojson, merge=True)
     assert len(result["features"]) == 1
 

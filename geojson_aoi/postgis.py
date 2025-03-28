@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from psycopg import Connection, connect
 
-from geojson_aoi.types import GeoJSON, FeatureCollection
+from geojson_aoi.types import FeatureCollection, GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +80,6 @@ class Normalize:
     @staticmethod
     def queryAsFeatureCollection(table_id: str) -> FeatureCollection:
         """Build the query string to get all of our geometries into a nice FeatureCollection."""
-
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
@@ -88,12 +87,12 @@ class Normalize:
                 FROM "{table_id}" as t(id, geom);"""
 
         return val
-    
+
     @staticmethod
     def merge(geoms: list[GeoJSON], table_id: str) -> str:
         """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
-        then return that string."""
-
+        then return that string.
+        """
         val = f"""
             CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
             $BODY$
@@ -120,7 +119,8 @@ class Normalize:
         """
 
         return val
-    
+
+
 class PostGis:
     """A synchronous database connection.
 
@@ -192,6 +192,7 @@ class PostGis:
             # Only close the connection if it was newly created
             if self.is_new_connection:
                 self.connection.close()
+
 
 class PostGisAsync:
     """An asynchronous database connection.
