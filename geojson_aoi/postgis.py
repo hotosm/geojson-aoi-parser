@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from psycopg import Connection, connect
 
-from geojson_aoi.types import GeoJSON
+from geojson_aoi.types import FeatureCollection, GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class Normalize:
         """
 
     @staticmethod
-    def insert(geoms: list[GeoJSON], table_id: str) -> str:
+    def insert(geoms: list[GeoJSON], table_id: str, merge: bool) -> str:
         """Insert geometries into db, normalising where possible."""
         values = []
         for geom in geoms:
@@ -74,23 +74,51 @@ class Normalize:
         value_string = ", ".join(values)
         return f"""
             INSERT INTO "{table_id}" (geometry)
-            VALUES {value_string};
+            VALUES ({value_string});
         """
 
+    @staticmethod
+    def query_as_feature_collection(table_id: str) -> FeatureCollection:
+        """Build the query string to get all of our geometries into a nice FeatureCollection."""
+        val = f"""SELECT json_build_object(
+                    'type', 'FeatureCollection',
+                    'features', json_agg(ST_AsGeoJSON(t.*)::json)
+                    )
+                FROM "{table_id}" as t(id, geom);"""
 
-class Merge:
-    """Merge polygons.
+        return val
 
-    - MultiPolygon to a single Polygon.
-    - Remove interior rings from all polygons (holes).
+    @staticmethod
+    def merge(geoms: list[GeoJSON], table_id: str) -> str:
+        """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
+        then return that string.
+        """
+        val = f"""
+            CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
+            $BODY$
+            DECLARE
+                i "{table_id}"%rowtype;
+            BEGIN
+                FOR i IN
+                    SELECT * FROM "{table_id}"
+                LOOP
+                    -- Using ST_NRings with ST_NumGeometries rather than ST_Disjoint
+                    -- This method seems to work for our use case for simply
+                    UPDATE "{table_id}"
+                    SET geometry = ST_ConvexHull(i.geometry)
+                    WHERE ST_NRings(i.geometry) - ST_NumGeometries(i.geometry) > 0;
 
-    Automatically determine whether to use union (for overlapping polygons)
-    or convex hull (for disjoint polygons).
-    """
+                    RETURN NEXT i;
+                END LOOP;
+                RETURN;
+            END;
+            $BODY$
+            LANGUAGE plpgsql;
 
-    pass
-    # ST_UnaryUnion
-    # ST_ConvexHull
+            SELECT * FROM merge_disjoints();
+        """
+
+        return val
 
 
 class PostGis:
@@ -108,17 +136,22 @@ class PostGis:
         self.featcol = None
 
         self.normalize = Normalize()
-        if merge:
-            self.merge = Merge()
+        self.merge = merge
 
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
         self.create_connection()
+
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
-            cur.execute(self.normalize.insert(self.geoms, self.table_id))
-            # if self.merge:
-            #     cur.execute(self.merge.unary_union(self.geoms, self.table_id))
+            cur.execute(self.normalize.insert(self.geoms, self.table_id, self.merge))
+
+            if self.merge:
+                cur.execute(self.normalize.merge(self.geoms, self.table_id))
+
+            cur.execute(self.normalize.query_as_feature_collection(self.table_id))
+            self.featcol = cur.fetchall()[0][0]
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
