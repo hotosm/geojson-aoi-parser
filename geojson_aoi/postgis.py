@@ -69,12 +69,6 @@ class Normalize:
             if geom.get("type") == "Polygon" or geom.get("type") == "MultiPolygon":
                 val = f"ST_ForcePolygonCW({val})"
 
-            # TODO: Consider doing merge here rather than in it's own class
-            # NOTE: I think this won't work since I need the geometries in the database to do the conditionals
-            #if(merge):
-            #    # do merge
-            #    val = "CASE WHEN ST_Overlaps"
-
             values.append(val)
 
         value_string = ", ".join(values)
@@ -100,12 +94,6 @@ class Normalize:
         """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
         then return that string."""
 
-        # TODO: Make postgres function to:
-        # - SELECT all geoms
-        # - Run each valid pair of results through ST_Overlaps? -> ST_Unary_Union
-        # - Remove entry left behind
-        # - Take care to not compare the same values twice
-        
         val = f"""
             CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
             $BODY$
