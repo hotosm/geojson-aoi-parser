@@ -78,7 +78,7 @@ class Normalize:
         """
 
     @staticmethod
-    def queryAsFeatureCollection(table_id: str) -> FeatureCollection:
+    def query_as_feature_collection(table_id: str) -> FeatureCollection:
         """Build the query string to get all of our geometries into a nice FeatureCollection."""
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
@@ -149,7 +149,7 @@ class PostGis:
             if self.merge:
                 cur.execute(self.normalize.merge(self.geoms, self.table_id))
 
-            cur.execute(self.normalize.queryAsFeatureCollection(self.table_id))
+            cur.execute(self.normalize.query_as_feature_collection(self.table_id))
             self.featcol = cur.fetchall()[0][0]
 
         return self
