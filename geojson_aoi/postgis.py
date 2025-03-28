@@ -130,15 +130,8 @@ class Normalize:
 
             SELECT * FROM merge_disjoints();
         """
-        
-        val2 = f"""
-            SELECT * FROM "{table_id}" a
-            INNER JOIN "{table_id}" b ON
-                (a.geometry && b.geometry AND ST_Overlaps(a.geometry, b.geometry))
-            WHERE a.id != b.id;
-        """
 
-        return val2
+        return val
     
 class PostGis:
     """A synchronous database connection.
