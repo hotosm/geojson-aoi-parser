@@ -89,7 +89,7 @@ class Normalize:
         return val
 
     @staticmethod
-    def merge(geoms: list[GeoJSON], table_id: str) -> str:
+    def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
         """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
         then return that string.
         """
@@ -147,7 +147,7 @@ class PostGis:
             cur.execute(self.normalize.insert(self.geoms, self.table_id, self.merge))
 
             if self.merge:
-                cur.execute(self.normalize.merge(self.geoms, self.table_id))
+                cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
             cur.execute(self.normalize.query_as_feature_collection(self.table_id))
             self.featcol = cur.fetchall()[0][0]
