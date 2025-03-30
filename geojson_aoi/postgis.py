@@ -90,8 +90,7 @@ class Normalize:
 
     @staticmethod
     def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
-        """This method will detect whether we need a unary union or a complex hull, build the corresponding query,
-        then return that string.
+        """Check whether a Polygon contains holes. If it does, do a ST_ConvexHull on the geom
         """
         val = f"""
             CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
