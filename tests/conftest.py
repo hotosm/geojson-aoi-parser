@@ -107,7 +107,7 @@ def multipolygon_holes_geojson():
 
 @pytest.fixture
 def polygon_overlaps_geojson():
-    """MultiPolygon with overlapping polygons"""
+    """Polygon with overlapping polygons"""
     return {
         "type": "Polygon",
         "coordinates": [
