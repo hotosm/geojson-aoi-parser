@@ -119,6 +119,14 @@ class Normalize:
         """
 
         return val
+    
+    @staticmethod
+    def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
+        """Check whether each MultiGeometry contains overlapping Polygons. Preform an ST_UnaryUnion
+        if they overlap.
+        """
+        val = ""
+        return val
 
 
 class PostGis:
