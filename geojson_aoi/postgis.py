@@ -93,10 +93,16 @@ class Normalize:
     # TODO: Consider merging interior rings as future feature should the need appear.
     # Will have a an extra flag to do this.
     # TODO: Also do not use this in a function.
+<<<<<<< HEAD
     #@staticmethod
     #def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
     #    """Check whether a Polygon contains holes. 
     #    If it does, do a ST_ConvexHull on the geom
+=======
+    # @staticmethod
+    # def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
+    #    """Check whether a Polygon contains holes. If it does, do a ST_ConvexHull on the geom
+>>>>>>> 5f6ae346f6840a77b717a7f63f8d28c9b848f52b
     #    """
     #    val = f"""
     #        CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
@@ -126,15 +132,23 @@ class Normalize:
     #    return val
     #
     ## TODO: Consider merging overlaps are a future feature.
+<<<<<<< HEAD
     #@staticmethod
     #def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
     #    """Check whether each MultiGeometry contains overlapping Polygons. 
     #       Preform an ST_UnaryUnion if they overlap.
+=======
+    # @staticmethod
+    # def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
+    #    """Check whether each MultiGeometry contains overlapping Polygons. Preform an ST_UnaryUnion
+    #    if they overlap.
+>>>>>>> 5f6ae346f6840a77b717a7f63f8d28c9b848f52b
     #    """
     #    val = f"""
     #
     #    """
     #    return val
+
 
 class PostGis:
     """A synchronous database connection.
@@ -153,7 +167,7 @@ class PostGis:
         self.normalize = Normalize()
 
         # NOTE: Pontential future polygon merging feature.
-        #self.merge = merge
+        # self.merge = merge
 
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
@@ -164,7 +178,7 @@ class PostGis:
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
 
             # NOTE: Potential future polygon merging feature.
-            #if self.merge:
+            # if self.merge:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
             cur.execute(self.normalize.query_as_feature_collection(self.table_id))
