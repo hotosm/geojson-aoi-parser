@@ -82,7 +82,6 @@ class Normalize:
         """Build the query string to get all of our geometries into
         a nice FeatureCollection.
         """
-        
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
