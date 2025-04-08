@@ -94,7 +94,7 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     Returns:
         list[GeoJSON]: a list of geometries.
     """
-    # FIXME possibly add logic to retain and existing properties?
+    # TODO: add logic to retain and existing properties?
 
     if geojson_obj.get("crs"):
         # Warn the user if invalid CRS detected
