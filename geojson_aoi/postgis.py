@@ -82,6 +82,7 @@ class Normalize:
         """Build the query string to get all of our geometries into 
         a nice FeatureCollection.
         """
+
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
@@ -95,7 +96,8 @@ class Normalize:
     # TODO: Also do not use this in a function.
     # @staticmethod
     # def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
-    #    """Check whether a Polygon contains holes. If it does, do a ST_ConvexHull on the geom
+    #    """Check whether a Polygon contains holes.
+    #    If it does, do a ST_ConvexHull on the geom.
     #    """
     #    val = f"""
     #        CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
@@ -127,8 +129,8 @@ class Normalize:
     ## TODO: Consider merging overlaps are a future feature.
     # @staticmethod
     # def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
-    #    """Check whether each MultiGeometry contains overlapping Polygons. Preform an ST_UnaryUnion
-    #    if they overlap.
+    #    """Check whether each MultiGeometry contains overlapping Polygons.
+    #    Preform an ST_UnaryUnion if they overlap.
     #    """
     #    val = f"""
     #
