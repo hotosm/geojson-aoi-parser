@@ -93,16 +93,9 @@ class Normalize:
     # TODO: Consider merging interior rings as future feature should the need appear.
     # Will have a an extra flag to do this.
     # TODO: Also do not use this in a function.
-<<<<<<< HEAD
-    #@staticmethod
-    #def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
-    #    """Check whether a Polygon contains holes. 
-    #    If it does, do a ST_ConvexHull on the geom
-=======
     # @staticmethod
     # def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
     #    """Check whether a Polygon contains holes. If it does, do a ST_ConvexHull on the geom
->>>>>>> 5f6ae346f6840a77b717a7f63f8d28c9b848f52b
     #    """
     #    val = f"""
     #        CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
@@ -132,17 +125,10 @@ class Normalize:
     #    return val
     #
     ## TODO: Consider merging overlaps are a future feature.
-<<<<<<< HEAD
-    #@staticmethod
-    #def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
-    #    """Check whether each MultiGeometry contains overlapping Polygons. 
-    #       Preform an ST_UnaryUnion if they overlap.
-=======
     # @staticmethod
     # def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
     #    """Check whether each MultiGeometry contains overlapping Polygons. Preform an ST_UnaryUnion
     #    if they overlap.
->>>>>>> 5f6ae346f6840a77b717a7f63f8d28c9b848f52b
     #    """
     #    val = f"""
     #
