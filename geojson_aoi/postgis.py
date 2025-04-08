@@ -79,9 +79,7 @@ class Normalize:
 
     @staticmethod
     def query_as_feature_collection(table_id: str) -> FeatureCollection:
-        """Build the query string to get all of our geometries into
-        a nice FeatureCollection.
-        """
+        """Query all geometries as FeatureCollection."""
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
