@@ -46,7 +46,7 @@ class Normalize:
         """
 
     @staticmethod
-    def insert(geoms: list[GeoJSON], table_id: str, merge: bool) -> str:
+    def insert(geoms: list[GeoJSON], table_id: str) -> str:
         """Insert geometries into db, normalising where possible."""
         values = []
         for geom in geoms:
@@ -91,48 +91,47 @@ class Normalize:
     # TODO: Consider merging interior rings as future feature should the need appear.
     # Will have a an extra flag to do this.
     # TODO: Also do not use this in a function.
-    @staticmethod
-    def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
-        """Check whether a Polygon contains holes. If it does, do a ST_ConvexHull on the geom
-        """
-        val = f"""
-            CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
-            $BODY$
-            DECLARE
-                i "{table_id}"%rowtype;
-            BEGIN
-                FOR i IN
-                    SELECT * FROM "{table_id}"
-                LOOP
-                    -- Using ST_NRings with ST_NumGeometries rather than ST_Disjoint
-                    -- This method seems to work for our use case for simply
-                    UPDATE "{table_id}"
-                    SET geometry = ST_ConvexHull(i.geometry)
-                    WHERE ST_NRings(i.geometry) - ST_NumGeometries(i.geometry) > 0;
-
-                    RETURN NEXT i;
-                END LOOP;
-                RETURN;
-            END;
-            $BODY$
-            LANGUAGE plpgsql;
-
-            SELECT * FROM merge_disjoints();
-        """
-
-        return val
-    
-    # TODO: Consider merging overlaps are a future feature.
-    @staticmethod
-    def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
-        """Check whether each MultiGeometry contains overlapping Polygons. Preform an ST_UnaryUnion
-        if they overlap.
-        """
-        val = f"""
-
-        """
-        return val
-
+    #@staticmethod
+    #def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
+    #    """Check whether a Polygon contains holes. If it does, do a ST_ConvexHull on the geom
+    #    """
+    #    val = f"""
+    #        CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
+    #        $BODY$
+    #        DECLARE
+    #            i "{table_id}"%rowtype;
+    #        BEGIN
+    #            FOR i IN
+    #                SELECT * FROM "{table_id}"
+    #            LOOP
+    #                -- Using ST_NRings with ST_NumGeometries rather than ST_Disjoint
+    #                -- This method seems to work for our use case for simply
+    #                UPDATE "{table_id}"
+    #                SET geometry = ST_ConvexHull(i.geometry)
+    #                WHERE ST_NRings(i.geometry) - ST_NumGeometries(i.geometry) > 0;
+    #
+    #                RETURN NEXT i;
+    #            END LOOP;
+    #            RETURN;
+    #        END;
+    #        $BODY$
+    #        LANGUAGE plpgsql;
+    #
+    #        SELECT * FROM merge_disjoints();
+    #    """
+    #
+    #    return val
+    #
+    ## TODO: Consider merging overlaps are a future feature.
+    #@staticmethod
+    #def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
+    #    """Check whether each MultiGeometry contains overlapping Polygons. Preform an ST_UnaryUnion
+    #    if they overlap.
+    #    """
+    #    val = f"""
+    #
+    #    """
+    #    return val
 
 class PostGis:
     """A synchronous database connection.
@@ -159,7 +158,7 @@ class PostGis:
 
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
-            cur.execute(self.normalize.insert(self.geoms, self.table_id, self.merge))
+            cur.execute(self.normalize.insert(self.geoms, self.table_id))
 
             # NOTE: Potential future polygon merging feature.
             #if self.merge:
