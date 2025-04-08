@@ -149,7 +149,9 @@ class PostGis:
         self.featcol = None
 
         self.normalize = Normalize()
-        self.merge = merge
+
+        # NOTE: Pontential future polygon merging feature.
+        #self.merge = merge
 
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
@@ -159,8 +161,9 @@ class PostGis:
             cur.execute(self.normalize.init_table(self.table_id))
             cur.execute(self.normalize.insert(self.geoms, self.table_id, self.merge))
 
-            if self.merge:
-                cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
+            # NOTE: Potential future polygon merging feature.
+            #if self.merge:
+            #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
             cur.execute(self.normalize.query_as_feature_collection(self.table_id))
             self.featcol = cur.fetchall()[0][0]
