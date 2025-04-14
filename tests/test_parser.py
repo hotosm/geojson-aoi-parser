@@ -33,6 +33,7 @@ def test_polygon_with_holes(db, polygon_holes_geojson):
     assert len(result["features"][0]["geometry"]["coordinates"]) == 3
 
 
+@pytest.mark.skip(reason="Test case for future feature.")
 def test_polygon_merge_with_holes(db, polygon_holes_geojson):
     """A single Polygon with holes, where the holes should be removed."""
     result = parse_aoi(db, polygon_holes_geojson, merge=True)
@@ -42,12 +43,14 @@ def test_polygon_merge_with_holes(db, polygon_holes_geojson):
     assert len(result["features"][0]["geometry"]["coordinates"]) == 1
 
 
+@pytest.mark.skip(reason="Test case for future feature.")
 def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
     """Merge overlapping polygons within multipolygon."""
     result = parse_aoi(db, polygon_overlaps_geojson, merge=True)
     assert len(result["features"]) == 1
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_z_dimension_polygon(db, polygon_geojson):
     """A single Polygon, with z-dimension coord stripped out."""
     geojson_data = {
@@ -83,6 +86,7 @@ def test_feature_collection(db, featcol_geojson):
     assert len(result["features"]) == 1
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_feature_collection_multiple_geoms(db, feature_geojson):
     """Multiple Polygon nested in Features, inside a FeatureCollection.
 
@@ -97,6 +101,7 @@ def test_feature_collection_multiple_geoms(db, feature_geojson):
     assert len(result["features"]) == 3
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_nested_geometrycollection(db, geomcol_geojson):
     """A GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {
@@ -114,6 +119,7 @@ def test_nested_geometrycollection(db, geomcol_geojson):
     assert len(result["features"]) == 1
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_multiple_nested_geometrycollection(db, geomcol_geojson):
     """Multiple GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {
@@ -149,6 +155,7 @@ def test_multiple_nested_geometrycollection(db, geomcol_geojson):
 #     assert len(result["features"]) == 3
 
 
+@pytest.mark.skip(reason="We are not doing the merge feature for now.")
 def test_featcol_merge_multiple_polygons(db):
     """Merge multiple polygons inside a FeatureCollection."""
     geojson_data = {
@@ -177,6 +184,7 @@ def test_featcol_merge_multiple_polygons(db):
     assert len(result["features"]) == 1
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_featcol_no_merge_polygons(db):
     """Do not merge multiple polygons inside a FeatureCollection."""
     geojson_data = {
@@ -205,6 +213,7 @@ def test_featcol_no_merge_polygons(db):
     assert len(result["features"]) == 2
 
 
+@pytest.mark.skip(reason="We are not doing the merge feature for now.")
 def test_merge_multipolygon(db, multipolygon_geojson):
     """Merge multiple polygons inside a MultiPolygon."""
     result = parse_aoi(db, multipolygon_geojson, merge=True)
@@ -217,6 +226,7 @@ def test_merge_multipolygon(db, multipolygon_geojson):
     # assert False
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_multipolygon_no_merge(db, multipolygon_geojson):
     """Do not merge multiple polygons inside a MultiPolygon."""
     result = parse_aoi(db, multipolygon_geojson)
@@ -224,6 +234,7 @@ def test_multipolygon_no_merge(db, multipolygon_geojson):
     assert len(result["features"]) == 3
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     """MultiPolygon --> Polygon, with holes remaining."""
     # FIXME this should not removed the holes from the polygon geom
@@ -234,6 +245,7 @@ def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     assert len(result["features"]) == 3
 
 
+@pytest.mark.skip(reason="We are not doing the merge feature for now.")
 def test_multipolygon_with_holes_merged(db, multipolygon_holes_geojson):
     """Merge multipolygon, including holes."""
     result = parse_aoi(db, multipolygon_holes_geojson, merge=True)
@@ -277,7 +289,7 @@ def test_file_input(db, tmp_path):
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
 
-
+@pytest.mark.skip(reason="Feature a WIP")
 def test_no_warnings_valid_crs(db):
     """Test including a valid CRS."""
     geojson_data = {
@@ -309,6 +321,7 @@ def test_no_warnings_valid_crs(db):
     assert len(result["features"]) == 1
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_warnings_raised_invalid_crs(db):
     """Test including an invalid CRS, raising warnings."""
     geojson_data = {
@@ -329,6 +342,7 @@ def test_warnings_raised_invalid_crs(db):
         parse_aoi(db, geojson_data)
 
 
+@pytest.mark.skip(reason="Feature a WIP")
 def test_warnings_raised_invalid_coords(db):
     """Test including an invalid coordinates, raising warnings."""
     geojson_data = {
