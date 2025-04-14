@@ -6,8 +6,7 @@ import pytest
 @pytest.fixture(scope="session")
 def db():
     """Database URI."""
-    # return "postgresql://aoi:dummycipassword@db:5432/aoi"
-    return "dbname=test user=luke"
+    return "postgresql://aoi:dummycipassword@db:5432/aoi"
 
 
 @pytest.fixture
