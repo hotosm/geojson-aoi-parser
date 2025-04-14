@@ -18,4 +18,4 @@ jobs:
       compose_file: compose.yml
       compose_service: aoi-parser
       compose_command: pytest
-      pre_command: docker compose up
+      pre_command: docker compose up &
