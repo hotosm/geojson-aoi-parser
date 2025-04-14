@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from psycopg import Connection, connect
 
-from geojson_aoi.types import GeoJSON
+from geojson_aoi.types import FeatureCollection, GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -74,23 +74,65 @@ class Normalize:
         value_string = ", ".join(values)
         return f"""
             INSERT INTO "{table_id}" (geometry)
-            VALUES {value_string};
+            VALUES ({value_string});
         """
 
+    @staticmethod
+    def query_as_feature_collection(table_id: str) -> FeatureCollection:
+        """Query all geometries as FeatureCollection."""
+        val = f"""SELECT json_build_object(
+                    'type', 'FeatureCollection',
+                    'features', json_agg(ST_AsGeoJSON(t.*)::json)
+                    )
+                FROM "{table_id}" as t(id, geom);"""
 
-class Merge:
-    """Merge polygons.
+        return val
 
-    - MultiPolygon to a single Polygon.
-    - Remove interior rings from all polygons (holes).
-
-    Automatically determine whether to use union (for overlapping polygons)
-    or convex hull (for disjoint polygons).
-    """
-
-    pass
-    # ST_UnaryUnion
-    # ST_ConvexHull
+    # TODO: Consider merging interior rings as future feature should the need appear.
+    # Will have a an extra flag to do this.
+    # TODO: Also do not use this in a function.
+    # @staticmethod
+    # def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
+    #    """Check whether a Polygon contains holes.
+    #    If it does, do a ST_ConvexHull on the geom.
+    #    """
+    #    val = f"""
+    #        CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
+    #        $BODY$
+    #        DECLARE
+    #            i "{table_id}"%rowtype;
+    #        BEGIN
+    #            FOR i IN
+    #                SELECT * FROM "{table_id}"
+    #            LOOP
+    #                -- Using ST_NRings with ST_NumGeometries rather than ST_Disjoint
+    #                -- This method seems to work for our use case for simply
+    #                UPDATE "{table_id}"
+    #                SET geometry = ST_ConvexHull(i.geometry)
+    #                WHERE ST_NRings(i.geometry) - ST_NumGeometries(i.geometry) > 0;
+    #
+    #                RETURN NEXT i;
+    #            END LOOP;
+    #            RETURN;
+    #        END;
+    #        $BODY$
+    #        LANGUAGE plpgsql;
+    #
+    #        SELECT * FROM merge_disjoints();
+    #    """
+    #
+    #    return val
+    #
+    ## TODO: Consider merging overlaps are a future feature.
+    # @staticmethod
+    # def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
+    #    """Check whether each MultiGeometry contains overlapping Polygons.
+    #    Preform an ST_UnaryUnion if they overlap.
+    #    """
+    #    val = f"""
+    #
+    #    """
+    #    return val
 
 
 class PostGis:
@@ -108,17 +150,25 @@ class PostGis:
         self.featcol = None
 
         self.normalize = Normalize()
-        if merge:
-            self.merge = Merge()
+
+        # NOTE: Pontential future polygon merging feature.
+        # self.merge = merge
 
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
         self.create_connection()
+
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
+
+            # NOTE: Potential future polygon merging feature.
             # if self.merge:
-            #     cur.execute(self.merge.unary_union(self.geoms, self.table_id))
+            #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
+
+            cur.execute(self.normalize.query_as_feature_collection(self.table_id))
+            self.featcol = cur.fetchall()[0][0]
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
