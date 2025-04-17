@@ -50,7 +50,6 @@ def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_z_dimension_polygon(db, polygon_geojson):
     """A single Polygon, with z-dimension coord stripped out."""
     geojson_data = {
