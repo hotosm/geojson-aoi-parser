@@ -3,10 +3,12 @@
 import pytest
 
 
+# TODO: Unable to get dummy session to work in pytest, or luke session to work in docker
 @pytest.fixture(scope="session")
 def db():
     """Database URI."""
     return "postgresql://aoi:dummycipassword@db:5432/aoi"
+    # return "dbname=test user=luke"
 
 
 @pytest.fixture
