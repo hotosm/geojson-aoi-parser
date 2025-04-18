@@ -59,14 +59,13 @@ def test_z_dimension_polygon(db, polygon_geojson):
     result = parse_aoi(db, geojson_data)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
-    print(f"RESULT \n\n\n =========== \n {result} \n ============= \n")
     assert result == {
         "type": "FeatureCollection",
         "features": [
             {
                 "type": "Feature",
                 "geometry": polygon_geojson,
-                "properties": {},
+                "properties": {"id": 1},
             }
         ],
     }
