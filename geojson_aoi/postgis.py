@@ -69,12 +69,14 @@ class Normalize:
             if geom.get("type") == "Polygon" or geom.get("type") == "MultiPolygon":
                 val = f"ST_ForcePolygonCW({val})"
 
-            values.append(val)
+            values.append(f"({val})")
 
         value_string = ", ".join(values)
+
+        print(f"DEBUG: {value_string}")
         return f"""
             INSERT INTO "{table_id}" (geometry)
-            VALUES ({value_string});
+            VALUES {value_string};
         """
 
     @staticmethod
@@ -84,7 +86,7 @@ class Normalize:
                     'type', 'FeatureCollection',
                     'features', json_agg(ST_AsGeoJSON(t.*)::json)
                     )
-                FROM "{table_id}" as t(id, geom);"""
+                FROM "{table_id}" as t(id,geom);"""
 
         return val
 

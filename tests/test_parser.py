@@ -85,7 +85,6 @@ def test_feature_collection(db, featcol_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_feature_collection_multiple_geoms(db, feature_geojson):
     """Multiple Polygon nested in Features, inside a FeatureCollection.
 
