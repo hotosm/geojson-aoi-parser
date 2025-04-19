@@ -180,7 +180,6 @@ def test_featcol_merge_multiple_polygons(db):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_featcol_no_merge_polygons(db):
     """Do not merge multiple polygons inside a FeatureCollection."""
     geojson_data = {
@@ -222,7 +221,6 @@ def test_merge_multipolygon(db, multipolygon_geojson):
     # assert False
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_multipolygon_no_merge(db, multipolygon_geojson):
     """Do not merge multiple polygons inside a MultiPolygon."""
     result = parse_aoi(db, multipolygon_geojson)
