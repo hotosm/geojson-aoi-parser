@@ -73,7 +73,6 @@ class Normalize:
 
         value_string = ", ".join(values)
 
-        print(f"DEBUG: {value_string}")
         return f"""
             INSERT INTO "{table_id}" (geometry)
             VALUES {value_string};
