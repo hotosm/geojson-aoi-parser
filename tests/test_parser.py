@@ -116,7 +116,6 @@ def test_nested_geometrycollection(db, geomcol_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_multiple_nested_geometrycollection(db, geomcol_geojson):
     """Multiple GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {

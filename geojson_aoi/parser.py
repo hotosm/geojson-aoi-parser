@@ -104,20 +104,23 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
 
     if geojson_type == "FeatureCollection":
         geoms = [feature["geometry"] for feature in geojson_obj.get("features", [])]
-        
+
         # Drill in and check if each feature is a GeometryCollection. 
         # If so, our work isn't done.
+        temp_geoms = []
         for geom in geoms:
             if geom["type"] == "GeometryCollection":
-                geoms = geom["geometries"]
-                   
+
+                for item in geom["geometries"]:
+                    temp_geoms.append(item)
+
+                geoms = temp_geoms
 
     elif geojson_type == "Feature":
         geoms = [geojson_obj.get("geometry")]
     else:
         geoms = [geojson_obj]
-
-    print(f"GEOM: {geoms}")
+    
     return geoms
 
 
