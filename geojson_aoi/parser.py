@@ -118,6 +118,20 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
 
     elif geojson_type == "Feature":
         geoms = [geojson_obj.get("geometry")]
+
+    elif geojson_type == "MultiPolygon":
+
+        # MultiPolygon should parse out into List of Polygons and maintain properties.
+        temp_geoms = []
+        for coordinate in geojson_obj.get("coordinates"):
+
+            # Build a Polygon from scratch out of the coordinates.
+            polygon = {"type": "Polygon",
+                       "coordinates": coordinate}
+            temp_geoms.append(polygon)
+
+        geoms = temp_geoms
+
     else:
         geoms = [geojson_obj]
     
