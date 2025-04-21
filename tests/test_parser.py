@@ -228,7 +228,6 @@ def test_multipolygon_no_merge(db, multipolygon_geojson):
     assert len(result["features"]) == 3
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     """MultiPolygon --> Polygon, with holes remaining."""
     # FIXME this should not removed the holes from the polygon geom
