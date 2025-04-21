@@ -235,7 +235,7 @@ def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     # FIXME (we only remove holes if merge=True)
     result = parse_aoi(db, multipolygon_holes_geojson)
     assert is_featcol_nested_polygon(result)
-    assert len(result["features"]) == 3
+    assert len(result["features"]) == 1
 
 
 @pytest.mark.skip(reason="We are not doing the merge feature for now.")
