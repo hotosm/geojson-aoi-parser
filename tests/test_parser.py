@@ -245,6 +245,14 @@ def test_multipolygon_with_holes_merged(db, multipolygon_holes_geojson):
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
 
+def test_feature_with_property(db, feature_with_property_geojson):
+    """Test a Feature with a single property."""
+    result = parse_aoi(db, feature_with_property_geojson)
+
+    for feature in result["features"]:
+        print(feature)
+        assert feature["properties"] == feature_with_property_geojson["properties"]
+
 
 def test_invalid_input(db):
     """Invalud input for parse_aoi function."""
