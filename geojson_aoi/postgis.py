@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from psycopg import Connection, connect
 
-from geojson_aoi.types import FeatureCollection, GeoJSON
+from geojson_aoi.types import GeoJSON
 
 log = logging.getLogger(__name__)
 

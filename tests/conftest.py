@@ -189,10 +189,9 @@ def feature_with_property_geojson():
             "type": "Polygon",
             "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
         },
-        "properties": {
-            "PropA": "val1"
-        },
+        "properties": {"PropA": "val1"},
     }
+
 
 @pytest.fixture
 def feature_with_properties_geojson():
@@ -203,9 +202,5 @@ def feature_with_properties_geojson():
             "type": "Polygon",
             "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
         },
-        "properties": {
-            "PropA": "val1",
-            "PropB": "val2",
-            "PropC": "val3"
-        },
+        "properties": {"PropA": "val1", "PropB": "val2", "PropC": "val3"},
     }
