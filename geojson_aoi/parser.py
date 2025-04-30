@@ -177,9 +177,13 @@ def parse_aoi(
         raise ValueError(f"The GeoJSON type must be one of: {AllowedInputTypes}")
 
     # Store properties in formats that contain them.
-    properties = ""
-    if geojson_parsed.get("type") in ["FeatureCollection", "Feature"]:
-        properties = geojson_parsed.get("properties")
+    properties = []
+    if geojson_parsed.get("type") == "Feature":
+        properties.append(geojson_parsed.get("properties"))
+
+    elif geojson_parsed.get("type") == "FeatureCollection":
+        for feature in geojson_parsed.get("features"):
+            properties.append(feature["properties"])
 
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
@@ -188,7 +192,10 @@ def parse_aoi(
 
         # Restore saved properties.
         if(properties):
+            feat_count = 0
             for feature in result.featcol["features"]:
-                feature["properties"] = properties
+                feature["properties"] = properties[feat_count]
+                feat_count = feat_count + 1
+
         print(result.featcol)
         return result.featcol
