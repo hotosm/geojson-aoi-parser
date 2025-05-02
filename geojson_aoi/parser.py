@@ -132,9 +132,6 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     else:
         geoms = [geojson_obj]
 
-    # Strip away any geom type that isn't a Polygon
-    geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
-
     return geoms
 
 
@@ -177,9 +174,6 @@ def parse_aoi(
     if geojson_parsed["type"] not in AllowedInputTypes:
         raise ValueError(f"The GeoJSON type must be one of: {AllowedInputTypes}")
 
-    # Extract from FeatureCollection
-    geoms = strip_featcol(geojson_parsed)
-
     # Store properties in formats that contain them.
     properties = []
     if geojson_parsed.get("type") == "Feature":
@@ -188,6 +182,12 @@ def parse_aoi(
     elif geojson_parsed.get("type") == "FeatureCollection":
         for feature in geojson_parsed.get("features"):
             properties.append(feature["properties"])
+
+    # Extract from FeatureCollection
+    geoms = strip_featcol(geojson_parsed)
+
+    # Strip away any geom type that isn't a Polygon
+    geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
     with PostGis(db, geoms, merge) as result:
 
