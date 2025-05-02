@@ -285,20 +285,23 @@ def test_geometrycollection_mixed_geoms(db, geometrycollection_mixed_geoms):
 
     assert (
         result == {
-            "type": "GeometryCollection",
-            "geometries": [
+            "type": "FeatureCollection",
+            "features": [
                 {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                          [
                             [40.0, 40.0],
-                            [20.0, 45.0],
                             [45.0, 30.0],
+                            [20.0, 45.0],
                             [40.0, 40.0]
+                          ]
                         ]
-                    ]
-                },
-            ] 
+                    }
+                }
+            ]
         }
     )
 

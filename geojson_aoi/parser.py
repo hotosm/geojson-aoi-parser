@@ -117,6 +117,9 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     elif geojson_type == "Feature":
         geoms = [geojson_obj.get("geometry")]
 
+    elif geojson_type == "GeometryCollection":
+        geoms = geojson_obj.get("geometries")
+
     elif geojson_type == "MultiPolygon":
 
         # MultiPolygon should parse out into List of Polygons and maintain properties.
@@ -190,6 +193,7 @@ def parse_aoi(
 
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
+    print(f"GEOMS: {geoms}")
 
     # Strip away any geom type that isn't a Polygon
     geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
