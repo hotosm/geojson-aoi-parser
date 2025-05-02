@@ -207,7 +207,7 @@ def feature_with_properties_geojson():
 
 
 @pytest.fixture
-def multipolyon_mixed_geoms():
+def geometrycollection_mixed_geoms():
     """GeometryCollection that contains all kinds of geoms."""
     return {
         "type": "GeometryCollection",

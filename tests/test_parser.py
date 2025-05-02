@@ -279,6 +279,57 @@ def test_featcol_different_properties(
     )
 
 
+def test_geometrycollection_mixed_geoms(db, geometrycollection_mixed_geoms):
+    """Test a GeometryCollection that contains all kinds of geoms."""
+    result = parse_aoi(db, geometrycollection_mixed_geoms)
+
+    assert result == {
+        "type": "GeometryCollection",
+        "geometries": [
+            {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [40.0, 40.0],
+                        [20.0, 45.0],
+                        [45.0, 30.0],
+                        [40.0, 40.0]
+                    ]
+                ]
+            },
+        ] 
+    }
+
+
+def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
+    """Test a FeatureCollection that contains all kinds of geoms."""
+    result = parse_aoi(db, featurecollection_mixed_geoms)
+
+    assert result == {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                      [
+                        [100.0, 0.0],
+                        [101.0, 0.0],
+                        [101.0, 1.0],
+                        [100.0, 1.0],
+                        [100.0, 0.0]
+                      ]
+                    ]
+                },
+                "properties": {
+                    "prop0": "value0",
+                    "prop1": { "this": "that" }
+                }
+            }
+        ]
+    }
+
 def test_invalid_input(db):
     """Invalud input for parse_aoi function."""
     with pytest.raises(
