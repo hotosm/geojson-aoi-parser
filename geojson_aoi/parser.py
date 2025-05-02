@@ -149,6 +149,10 @@ def parse_aoi(
     Returns:
         FeatureCollection: a FeatureCollection.
     """
+
+    # We want to maintain this list for input control.
+    valid_geoms = ["Polygon", "MultiPolygon", "GeometryCollection"]
+
     # Parse different input types
     if isinstance(geojson_raw, bytes):
         geojson_parsed = json.loads(geojson_raw)
@@ -176,12 +180,13 @@ def parse_aoi(
 
     # Store properties in formats that contain them.
     properties = []
-    if geojson_parsed.get("type") == "Feature":
+    if geojson_parsed.get("type") == "Feature" and geojson_parsed.get("geometry")["type"] in valid_geoms:
         properties.append(geojson_parsed.get("properties"))
 
     elif geojson_parsed.get("type") == "FeatureCollection":
         for feature in geojson_parsed.get("features"):
-            properties.append(feature["properties"])
+            if feature["geometry"]["type"] in valid_geoms:
+                properties.append(feature["properties"])
 
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
