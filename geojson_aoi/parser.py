@@ -177,6 +177,9 @@ def parse_aoi(
     if geojson_parsed["type"] not in AllowedInputTypes:
         raise ValueError(f"The GeoJSON type must be one of: {AllowedInputTypes}")
 
+    # Extract from FeatureCollection
+    geoms = strip_featcol(geojson_parsed)
+
     # Store properties in formats that contain them.
     properties = []
     if geojson_parsed.get("type") == "Feature":
@@ -186,10 +189,8 @@ def parse_aoi(
         for feature in geojson_parsed.get("features"):
             properties.append(feature["properties"])
 
-    # Extract from FeatureCollection
-    geoms = strip_featcol(geojson_parsed)
-
     with PostGis(db, geoms, merge) as result:
+
         # Restore saved properties.
         if properties:
             feat_count = 0
