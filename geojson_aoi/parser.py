@@ -95,6 +95,7 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
         list[GeoJSON]: a list of geometries.
     """
     if geojson_obj.get("crs"):
+
         # Warn the user if invalid CRS detected
         check_crs(geojson_obj)
 
@@ -117,9 +118,11 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
         geoms = [geojson_obj.get("geometry")]
 
     elif geojson_type == "MultiPolygon":
+
         # MultiPolygon should parse out into List of Polygons and maintain properties.
         temp_geoms = []
         for coordinate in geojson_obj.get("coordinates"):
+
             # Build a Polygon from scratch out of the coordinates.
             polygon = {"type": "Polygon", "coordinates": coordinate}
             temp_geoms.append(polygon)
@@ -128,6 +131,9 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
 
     else:
         geoms = [geojson_obj]
+
+    # Strip away any geom type that isn't a Polygon
+    geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
     return geoms
 
