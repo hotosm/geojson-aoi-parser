@@ -95,7 +95,6 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
         list[GeoJSON]: a list of geometries.
     """
     if geojson_obj.get("crs"):
-
         # Warn the user if invalid CRS detected
         check_crs(geojson_obj)
 
@@ -121,11 +120,9 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
         geoms = geojson_obj.get("geometries")
 
     elif geojson_type == "MultiPolygon":
-
         # MultiPolygon should parse out into List of Polygons and maintain properties.
         temp_geoms = []
         for coordinate in geojson_obj.get("coordinates"):
-
             # Build a Polygon from scratch out of the coordinates.
             polygon = {"type": "Polygon", "coordinates": coordinate}
             temp_geoms.append(polygon)
@@ -152,7 +149,6 @@ def parse_aoi(
     Returns:
         FeatureCollection: a FeatureCollection.
     """
-
     # We want to maintain this list for input control.
     valid_geoms = ["Polygon", "MultiPolygon", "GeometryCollection"]
 
@@ -183,7 +179,10 @@ def parse_aoi(
 
     # Store properties in formats that contain them.
     properties = []
-    if geojson_parsed.get("type") == "Feature" and geojson_parsed.get("geometry")["type"] in valid_geoms:
+    if (
+        geojson_parsed.get("type") == "Feature"
+        and geojson_parsed.get("geometry")["type"] in valid_geoms
+    ):
         properties.append(geojson_parsed.get("properties"))
 
     elif geojson_parsed.get("type") == "FeatureCollection":
@@ -200,7 +199,6 @@ def parse_aoi(
     print(f"GEOMS: {geoms}")
 
     with PostGis(db, geoms, merge) as result:
-        
         # Remove any properties that PostGIS might have assigned.
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
