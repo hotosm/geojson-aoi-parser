@@ -64,8 +64,7 @@ def test_z_dimension_polygon(db, polygon_geojson):
         "features": [
             {
                 "type": "Feature",
-                "geometry": polygon_geojson,
-                "properties": {"id": 1},
+                "geometry": polygon_geojson
             }
         ],
     }

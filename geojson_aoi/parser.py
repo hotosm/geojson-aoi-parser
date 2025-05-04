@@ -193,12 +193,17 @@ def parse_aoi(
 
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
-    print(f"GEOMS: {geoms}")
 
     # Strip away any geom type that isn't a Polygon
     geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
+    print(f"GEOMS: {geoms}")
+
     with PostGis(db, geoms, merge) as result:
+        
+        # Remove any properties that PostGIS might have assigned.
+        for feature in result.featcol["features"]:
+            feature.pop("properties", None)
 
         # Restore saved properties.
         if properties:
