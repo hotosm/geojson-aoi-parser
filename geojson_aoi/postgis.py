@@ -20,7 +20,7 @@ import json
 import logging
 from uuid import uuid4
 
-from psycopg import Connection, connect
+from psycopg import Connection, connect, sql
 
 from geojson_aoi.types import GeoJSON
 
@@ -46,7 +46,7 @@ class Normalize:
         """
 
     @staticmethod
-    def insert(geoms: list[GeoJSON], table_id: str) -> str:
+    def insert(geoms: list[GeoJSON], table_id: str) -> sql.SQL:
         """Insert geometries into db, normalising where possible."""
         values = []
         for geom in geoms:
@@ -73,10 +73,10 @@ class Normalize:
 
         value_string = ", ".join(values)
 
-        return f"""
-            INSERT INTO "{table_id}" (geometry)
-            VALUES {value_string};
-        """
+        return sql.SQL("""
+                INSERT INTO {} (geometry)
+                VALUES {};
+            """).format(sql.Identifier(table_id), sql.SQL(value_string))
 
     @staticmethod
     def query_as_feature_collection(table_id: str) -> str:
@@ -161,6 +161,7 @@ class PostGis:
 
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
+            
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
 
             # NOTE: Potential future polygon merging feature.
@@ -178,14 +179,17 @@ class PostGis:
 
     def create_connection(self) -> None:
         """Get a new database connection."""
+
         # Create new connection
         if isinstance(self.db, str):
             self.connection = connect(self.db)
             self.is_new_connection = True
+
         # Reuse existing connection
         elif isinstance(self.db, Connection):
             self.connection = self.db
             self.is_new_connection = False
+
         # Else, error
         else:
             msg = (
