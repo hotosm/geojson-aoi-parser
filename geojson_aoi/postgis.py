@@ -161,7 +161,7 @@ class PostGis:
 
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
-            
+
             cur.execute(self.normalize.insert(self.geoms, self.table_id))
 
             # NOTE: Potential future polygon merging feature.
@@ -179,7 +179,6 @@ class PostGis:
 
     def create_connection(self) -> None:
         """Get a new database connection."""
-
         # Create new connection
         if isinstance(self.db, str):
             self.connection = connect(self.db)
