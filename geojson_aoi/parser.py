@@ -94,8 +94,6 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     Returns:
         list[GeoJSON]: a list of geometries.
     """
-    # TODO: add logic to retain and existing properties?
-
     if geojson_obj.get("crs"):
         # Warn the user if invalid CRS detected
         check_crs(geojson_obj)
@@ -104,8 +102,33 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
 
     if geojson_type == "FeatureCollection":
         geoms = [feature["geometry"] for feature in geojson_obj.get("features", [])]
+
+        # Drill in and check if each feature is a GeometryCollection.
+        # If so, our work isn't done.
+        temp_geoms = []
+        for geom in geoms:
+            if geom["type"] == "GeometryCollection":
+                for item in geom["geometries"]:
+                    temp_geoms.append(item)
+
+                geoms = temp_geoms
+
     elif geojson_type == "Feature":
         geoms = [geojson_obj.get("geometry")]
+
+    elif geojson_type == "GeometryCollection":
+        geoms = geojson_obj.get("geometries")
+
+    elif geojson_type == "MultiPolygon":
+        # MultiPolygon should parse out into List of Polygons and maintain properties.
+        temp_geoms = []
+        for coordinate in geojson_obj.get("coordinates"):
+            # Build a Polygon from scratch out of the coordinates.
+            polygon = {"type": "Polygon", "coordinates": coordinate}
+            temp_geoms.append(polygon)
+
+        geoms = temp_geoms
+
     else:
         geoms = [geojson_obj]
 
@@ -126,6 +149,9 @@ def parse_aoi(
     Returns:
         FeatureCollection: a FeatureCollection.
     """
+    # We want to maintain this list for input control.
+    valid_geoms = ["Polygon", "MultiPolygon", "GeometryCollection"]
+
     # Parse different input types
     if isinstance(geojson_raw, bytes):
         geojson_parsed = json.loads(geojson_raw)
@@ -151,9 +177,38 @@ def parse_aoi(
     if geojson_parsed["type"] not in AllowedInputTypes:
         raise ValueError(f"The GeoJSON type must be one of: {AllowedInputTypes}")
 
+    # Store properties in formats that contain them.
+    properties = []
+    if (
+        geojson_parsed.get("type") == "Feature"
+        and geojson_parsed.get("geometry")["type"] in valid_geoms
+    ):
+        properties.append(geojson_parsed.get("properties"))
+
+    elif geojson_parsed.get("type") == "FeatureCollection":
+        for feature in geojson_parsed.get("features"):
+            if feature["geometry"]["type"] in valid_geoms:
+                properties.append(feature["properties"])
+
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
 
+    # Strip away any geom type that isn't a Polygon
+    geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
+
+    print(f"GEOMS: {geoms}")
+
     with PostGis(db, geoms, merge) as result:
+        # Remove any properties that PostGIS might have assigned.
+        for feature in result.featcol["features"]:
+            feature.pop("properties", None)
+
+        # Restore saved properties.
+        if properties:
+            feat_count = 0
+            for feature in result.featcol["features"]:
+                feature["properties"] = properties[feat_count]
+                feat_count = feat_count + 1
+
         print(result.featcol)
         return result.featcol
