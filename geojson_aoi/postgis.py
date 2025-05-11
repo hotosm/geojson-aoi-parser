@@ -179,7 +179,6 @@ class PostGis:
 
     def create_connection(self) -> None:
         """Get a new database connection."""
-
         # Create new connection
         if isinstance(self.db, str):
             self.connection = connect(self.db)
