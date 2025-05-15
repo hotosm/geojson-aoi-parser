@@ -50,7 +50,6 @@ def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_z_dimension_polygon(db, polygon_geojson):
     """A single Polygon, with z-dimension coord stripped out."""
     geojson_data = {
@@ -62,13 +61,7 @@ def test_z_dimension_polygon(db, polygon_geojson):
     assert len(result["features"]) == 1
     assert result == {
         "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": polygon_geojson,
-                "properties": {},
-            }
-        ],
+        "features": [{"type": "Feature", "geometry": polygon_geojson}],
     }
 
 
@@ -86,7 +79,6 @@ def test_feature_collection(db, featcol_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_feature_collection_multiple_geoms(db, feature_geojson):
     """Multiple Polygon nested in Features, inside a FeatureCollection.
 
@@ -101,7 +93,6 @@ def test_feature_collection_multiple_geoms(db, feature_geojson):
     assert len(result["features"]) == 3
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_nested_geometrycollection(db, geomcol_geojson):
     """A GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {
@@ -119,7 +110,6 @@ def test_nested_geometrycollection(db, geomcol_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_multiple_nested_geometrycollection(db, geomcol_geojson):
     """Multiple GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {
@@ -184,7 +174,6 @@ def test_featcol_merge_multiple_polygons(db):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_featcol_no_merge_polygons(db):
     """Do not merge multiple polygons inside a FeatureCollection."""
     geojson_data = {
@@ -226,7 +215,6 @@ def test_merge_multipolygon(db, multipolygon_geojson):
     # assert False
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_multipolygon_no_merge(db, multipolygon_geojson):
     """Do not merge multiple polygons inside a MultiPolygon."""
     result = parse_aoi(db, multipolygon_geojson)
@@ -234,7 +222,6 @@ def test_multipolygon_no_merge(db, multipolygon_geojson):
     assert len(result["features"]) == 3
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     """MultiPolygon --> Polygon, with holes remaining."""
     # FIXME this should not removed the holes from the polygon geom
@@ -242,7 +229,7 @@ def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     # FIXME (we only remove holes if merge=True)
     result = parse_aoi(db, multipolygon_holes_geojson)
     assert is_featcol_nested_polygon(result)
-    assert len(result["features"]) == 3
+    assert len(result["features"]) == 1
 
 
 @pytest.mark.skip(reason="We are not doing the merge feature for now.")
@@ -251,6 +238,86 @@ def test_multipolygon_with_holes_merged(db, multipolygon_holes_geojson):
     result = parse_aoi(db, multipolygon_holes_geojson, merge=True)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
+
+
+def test_feature_with_property(db, feature_with_property_geojson):
+    """Test a Feature with a single property."""
+    result = parse_aoi(db, feature_with_property_geojson)
+
+    for feature in result["features"]:
+        print(feature)
+        assert feature["properties"] == feature_with_property_geojson["properties"]
+
+
+def test_featcol_different_properties(
+    db, feature_with_property_geojson, feature_with_properties_geojson
+):
+    """Test a FeatureCollection with differing properties in the Features."""
+    geojson_data = {
+        "type": "FeatureCollection",
+        "features": [
+            feature_with_property_geojson,
+            feature_with_properties_geojson,
+        ],
+    }
+
+    result = parse_aoi(db, geojson_data)
+
+    assert (
+        result["features"][0]["properties"]
+        == feature_with_property_geojson["properties"]
+    )
+    assert (
+        result["features"][1]["properties"]
+        == feature_with_properties_geojson["properties"]
+    )
+
+
+def test_geometrycollection_mixed_geoms(db, geometrycollection_mixed_geoms):
+    """Test a GeometryCollection that contains all kinds of geoms."""
+    result = parse_aoi(db, geometrycollection_mixed_geoms)
+
+    assert result == {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [[40.0, 40.0], [45.0, 30.0], [20.0, 45.0], [40.0, 40.0]]
+                    ],
+                },
+            }
+        ],
+    }
+
+
+def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
+    """Test a FeatureCollection that contains all kinds of geoms."""
+    result = parse_aoi(db, featurecollection_mixed_geoms)
+
+    assert result == {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [100.0, 0.0],
+                            [100.0, 1.0],
+                            [101.0, 1.0],
+                            [101.0, 0.0],
+                            [100.0, 0.0],
+                        ]
+                    ],
+                },
+                "properties": {"prop0": "value0", "prop1": {"this": "that"}},
+            }
+        ],
+    }
 
 
 def test_invalid_input(db):

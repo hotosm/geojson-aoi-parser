@@ -16,13 +16,13 @@
 #
 """Wrapper around PostGIS geometry functions."""
 
-import json
 import logging
 from uuid import uuid4
 
-from psycopg import Connection, connect
+from psycopg import Connection, connect, sql
+from psycopg.types.json import Jsonb
 
-from geojson_aoi.types import FeatureCollection, GeoJSON
+from geojson_aoi.types import GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -46,39 +46,27 @@ class Normalize:
         """
 
     @staticmethod
-    def insert(geoms: list[GeoJSON], table_id: str) -> str:
-        """Insert geometries into db, normalising where possible."""
-        values = []
-        for geom in geoms:
-            # ST_Force2D strings z-coordinates
-            val = (
-                "ST_Force2D(ST_SetSRID("
-                f"ST_GeomFromGeoJSON('{json.dumps(geom)}'), 4326))"
-            )
+    def get_transformation_funcs(geom: GeoJSON) -> str:
+        """Construct and return string of functions that correspond with given geom."""
+        # ST_Force2D strings z-coordinates
+        val = "ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))"
+        # ST_CollectionExtract converts any GeometryCollections
+        # into MultiXXX geoms
+        if geom.get("type") == "GeometryCollection":
+            val = f"ST_CollectionExtract({val})"
 
-            # ST_CollectionExtract converts any GeometryCollections
-            # into MultiXXX geoms
-            if geom.get("type") == "GeometryCollection":
-                val = f"ST_CollectionExtract({val})"
+        # ST_Dump extracts all MultiXXX geoms to single geom equivalents
+        # TODO ST_Dump (complex, as it returns multiple geometries!)
 
-            # ST_Dump extracts all MultiXXX geoms to single geom equivalents
-            # TODO ST_Dump (complex, as it returns multiple geometries!)
+        # ST_ForcePolygonCW forces clockwise orientation for
+        # their exterior ring
+        if geom.get("type") == "Polygon" or geom.get("type") == "MultiPolygon":
+            val = f"ST_ForcePolygonCW({val})"
 
-            # ST_ForcePolygonCW forces clockwise orientation for
-            # their exterior ring
-            if geom.get("type") == "Polygon" or geom.get("type") == "MultiPolygon":
-                val = f"ST_ForcePolygonCW({val})"
-
-            values.append(val)
-
-        value_string = ", ".join(values)
-        return f"""
-            INSERT INTO "{table_id}" (geometry)
-            VALUES ({value_string});
-        """
+        return val
 
     @staticmethod
-    def query_as_feature_collection(table_id: str) -> FeatureCollection:
+    def query_as_feature_collection(table_id: str) -> str:
         """Query all geometries as FeatureCollection."""
         val = f"""SELECT json_build_object(
                     'type', 'FeatureCollection',
@@ -160,7 +148,18 @@ class PostGis:
 
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
-            cur.execute(self.normalize.insert(self.geoms, self.table_id))
+
+            for geom in self.geoms:
+                st_functions = self.normalize.get_transformation_funcs(geom)
+
+                SQL = sql.SQL("""
+                        INSERT INTO {} (geometry)
+                        VALUES ({});
+                    """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
+
+                data = (Jsonb(geom),)
+
+                cur.execute(SQL, data)
 
             # NOTE: Potential future polygon merging feature.
             # if self.merge:
@@ -181,10 +180,12 @@ class PostGis:
         if isinstance(self.db, str):
             self.connection = connect(self.db)
             self.is_new_connection = True
+
         # Reuse existing connection
         elif isinstance(self.db, Connection):
             self.connection = self.db
             self.is_new_connection = False
+
         # Else, error
         else:
             msg = (

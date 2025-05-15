@@ -3,10 +3,12 @@
 import pytest
 
 
+# TODO: Unable to get dummy session to work in pytest, or luke session to work in docker
 @pytest.fixture(scope="session")
 def db():
     """Database URI."""
-    return "postgresql://aoi:dummycipassword@db:5432/aoi"
+    # return "postgresql://aoi:dummycipassword@db:5432/aoi"
+    return "dbname=test user=luke"
 
 
 @pytest.fixture
@@ -14,7 +16,7 @@ def polygon_geojson():
     """Polygon."""
     return {
         "type": "Polygon",
-        "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
     }
 
 
@@ -174,5 +176,124 @@ def geomcol_geojson():
                 "type": "Polygon",
                 "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
             }
+        ],
+    }
+
+
+@pytest.fixture
+def feature_with_property_geojson():
+    """Feature with a single property."""
+    return {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        },
+        "properties": {"PropA": "val1"},
+    }
+
+
+@pytest.fixture
+def feature_with_properties_geojson():
+    """Feature with multiple properties."""
+    return {
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        },
+        "properties": {"PropA": "val1", "PropB": "val2", "PropC": "val3"},
+    }
+
+
+@pytest.fixture
+def geometrycollection_mixed_geoms():
+    """GeometryCollection that contains all kinds of geoms."""
+    return {
+        "type": "GeometryCollection",
+        "geometries": [
+            {"type": "Point", "coordinates": [40.0, 10.0]},
+            {
+                "type": "LineString",
+                "coordinates": [[10.0, 10.0], [20.0, 20.0], [10.0, 40.0]],
+            },
+            {
+                "type": "Polygon",
+                "coordinates": [
+                    [[40.0, 40.0], [20.0, 45.0], [45.0, 30.0], [40.0, 40.0]]
+                ],
+            },
+            {
+                "type": "MultiLineString",
+                "coordinates": [
+                    [[10.0, 10.0], [20.0, 20.0], [10.0, 40.0]],
+                    [[40.0, 40.0], [30.0, 30.0], [40.0, 20.0], [30.0, 10.0]],
+                ],
+            },
+            {
+                "type": "MultiPoint",
+                "coordinates": [[10.0, 40.0], [40.0, 30.0], [20.0, 20.0], [30.0, 10.0]],
+            },
+            {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[40.0, 40.0], [20.0, 45.0], [45.0, 30.0], [40.0, 40.0]]],
+                    [
+                        [
+                            [20.0, 35.0],
+                            [10.0, 30.0],
+                            [10.0, 10.0],
+                            [30.0, 5.0],
+                            [45.0, 20.0],
+                            [20.0, 35.0],
+                        ],
+                        [[30.0, 20.0], [20.0, 15.0], [20.0, 25.0], [30.0, 20.0]],
+                    ],
+                ],
+            },
+        ],
+    }
+
+
+@pytest.fixture
+def featurecollection_mixed_geoms():
+    """FeatureCollection with different geom types."""
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"prop0": "value0"},
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [102.0, 0.0],
+                        [103.0, 1.0],
+                        [104.0, 0.0],
+                        [105.0, 1.0],
+                    ],
+                },
+                "properties": {"prop0": "value0", "prop1": 0.0},
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [100.0, 0.0],
+                            [101.0, 0.0],
+                            [101.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ]
+                    ],
+                },
+                "properties": {"prop0": "value0", "prop1": {"this": "that"}},
+            },
         ],
     }

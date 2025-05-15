@@ -6,3 +6,5 @@ from typing import Any
 GeoJSON = dict[str, Any]
 Feature = dict[str, Any]
 FeatureCollection = dict[str, Any]
+GeometryCollection = dict[str, Any]
+MultiPolygon = dict[str, Any]
