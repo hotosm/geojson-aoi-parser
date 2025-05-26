@@ -47,7 +47,7 @@ class AsyncPostGis:
         # NOTE: Pontential future polygon merging feature.
         # self.merge = merge
 
-    async def __aenter__(self) -> "PostGis":
+    async def __aenter__(self) -> "AsyncPostGis":
         """Initialise the database via context manager."""
         await self.create_connection()
 
