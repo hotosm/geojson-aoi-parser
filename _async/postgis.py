@@ -14,12 +14,12 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Wrapper around PostGIS geometry functions."""
+"""Wrapper around PostGIS geometry functions. Async version."""
 
 import logging
 from uuid import uuid4
 
-from psycopg import Connection, connect, sql
+from psycopg import AsyncConnection, connect, sql
 from psycopg.types.json import Jsonb
 
 from geojson_aoi.types import GeoJSON
@@ -27,14 +27,15 @@ from geojson_aoi.normalize import Normalize
 
 log = logging.getLogger(__name__)
 
-class PostGis:
-    """A synchronous database connection.
 
-    Typically called standalone.
+class PostGis:
+    """An asynchronous database connection.
+
+    Typically called from an async web server.
     Can reuse an existing upstream connection.
     """
 
-    def __init__(self, db: str | Connection, geoms: list[GeoJSON], merge: bool = False):
+    async def __init__(self, db: str | AsyncConnection, geoms: list[GeoJSON], merge: bool = False):
         """Initialise variables and compose classes."""
         self.table_id = uuid4().hex
         self.geoms = geoms
@@ -46,12 +47,12 @@ class PostGis:
         # NOTE: Pontential future polygon merging feature.
         # self.merge = merge
 
-    def __enter__(self) -> "PostGis":
+    async def __aenter__(self) -> "PostGis":
         """Initialise the database via context manager."""
         self.create_connection()
 
-        with self.connection.cursor() as cur:
-            cur.execute(self.normalize.init_table(self.table_id))
+        async with self.connection.cursor() as cur:
+            await cur.execute(self.normalize.init_table(self.table_id))
             
             for geom in self.geoms:
                 st_functions = self.normalize.get_transformation_funcs(geom)
@@ -63,22 +64,22 @@ class PostGis:
                 
                 data = (Jsonb(geom), )
 
-                cur.execute(SQL, data)
+                await cur.execute(SQL, data)
 
             # NOTE: Potential future polygon merging feature.
             # if self.merge:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
-            cur.execute(self.normalize.query_as_feature_collection(self.table_id))
+            await cur.execute(self.normalize.query_as_feature_collection(self.table_id))
             self.featcol = cur.fetchall()[0][0]
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Execute the SQL and optionally close the db connection."""
         self.close_connection()
 
-    def create_connection(self) -> None:
+    async def create_connection(self) -> None:
         """Get a new database connection."""
         # Create new connection
         if isinstance(self.db, str):
@@ -86,7 +87,7 @@ class PostGis:
             self.is_new_connection = True
 
         # Reuse existing connection
-        elif isinstance(self.db, Connection):
+        elif isinstance(self.db, AsyncConnection):
             self.connection = self.db
             self.is_new_connection = False
 
@@ -99,14 +100,14 @@ class PostGis:
             log.error(msg)
             raise ValueError(msg)
 
-    def close_connection(self) -> None:
+    async def close_connection(self) -> None:
         """Close the database connection."""
         if not self.connection:
             return
 
         # Execute all commands in a transaction before closing
         try:
-            self.connection.commit()
+            await self.connection.commit()
         except Exception as e:
             log.error(e)
             log.error("Error committing psycopg transaction to db")
