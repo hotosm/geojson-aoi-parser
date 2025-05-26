@@ -28,7 +28,7 @@ from geojson_aoi.normalize import Normalize
 log = logging.getLogger(__name__)
 
 
-class PostGis:
+class AsyncPostGis:
     """An asynchronous database connection.
 
     Typically called from an async web server.
@@ -49,7 +49,7 @@ class PostGis:
 
     async def __aenter__(self) -> "PostGis":
         """Initialise the database via context manager."""
-        self.create_connection()
+        await self.create_connection()
 
         async with self.connection.cursor() as cur:
             await cur.execute(self.normalize.init_table(self.table_id))
@@ -71,19 +71,19 @@ class PostGis:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
             await cur.execute(self.normalize.query_as_feature_collection(self.table_id))
-            self.featcol = cur.fetchall()[0][0]
+            self.featcol = await cur.fetchall()[0][0]
 
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Execute the SQL and optionally close the db connection."""
-        self.close_connection()
+        await self.close_connection()
 
     async def create_connection(self) -> None:
         """Get a new database connection."""
         # Create new connection
         if isinstance(self.db, str):
-            self.connection = connect(self.db)
+            self.connection = await connect(self.db)
             self.is_new_connection = True
 
         # Reuse existing connection
@@ -114,4 +114,4 @@ class PostGis:
         finally:
             # Only close the connection if it was newly created
             if self.is_new_connection:
-                self.connection.close()
+                await self.connection.close()
