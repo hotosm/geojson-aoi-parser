@@ -117,7 +117,7 @@ def main():
     if not check_only:
         print("**Files to unasync:**")
     unasync_dir(
-        "geojson-aoi-parser/_async", "geojson-aoi-parser/_sync", check_only=check_only
+        "geojson_aoi/_async", "geojson_aoi/_sync", check_only=check_only
     )
     unasync_dir("tests/_async", "tests/_sync", check_only=check_only)
 
