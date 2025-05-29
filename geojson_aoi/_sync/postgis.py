@@ -14,7 +14,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Wrapper around PostGIS geometry functions. Async version."""
+"""Wrapper around PostGIS geometry functions."""
 
 import logging
 from uuid import uuid4
