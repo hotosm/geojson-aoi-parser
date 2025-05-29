@@ -24,7 +24,7 @@ from pathlib import Path
 
 from psycopg import Connection
 
-from geojson_aoi.postgis import PostGis
+from geojson_aoi._sync.postgis import PostGis
 from geojson_aoi.types import Feature, FeatureCollection, GeoJSON
 
 AllowedInputTypes = [
@@ -196,8 +196,6 @@ def parse_aoi(
     # Strip away any geom type that isn't a Polygon
     geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
-    print(f"GEOMS: {geoms}")
-
     with PostGis(db, geoms, merge) as result:
         # Remove any properties that PostGIS might have assigned.
         for feature in result.featcol["features"]:
@@ -209,6 +207,5 @@ def parse_aoi(
             for feature in result.featcol["features"]:
                 feature["properties"] = properties[feat_count]
                 feat_count = feat_count + 1
-
-        print(result.featcol)
+                
         return result.featcol
