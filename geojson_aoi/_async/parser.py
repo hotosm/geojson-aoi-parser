@@ -22,9 +22,9 @@ import logging
 import warnings
 from pathlib import Path
 
-from psycopg import AsyncConnection
+from psycopg import Connection
 
-from geojson_aoi._async.postgis import AsyncPostGis
+from geojson_aoi._sync.postgis import PostGis
 from geojson_aoi.types import Feature, FeatureCollection, GeoJSON
 
 AllowedInputTypes = [
@@ -135,8 +135,8 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     return geoms
 
 
-async def parse_aoi(
-    db: str | AsyncConnection, geojson_raw: str | bytes | dict, merge: bool = False
+def parse_aoi(
+    db: str | Connection, geojson_raw: str | bytes | dict, merge: bool = False
 ) -> FeatureCollection:
     """Parse a GeoJSON file or data struc into a normalized FeatureCollection.
 
@@ -196,7 +196,7 @@ async def parse_aoi(
     # Strip away any geom type that isn't a Polygon
     geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
-    async with AsyncPostGis(db, geoms, merge) as result:
+    with PostGis(db, geoms, merge) as result:
         # Remove any properties that PostGIS might have assigned.
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
