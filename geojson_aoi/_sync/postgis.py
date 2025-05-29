@@ -14,7 +14,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Wrapper around PostGIS geometry functions."""
+"""Wrapper around PostGIS geometry functions. Async version."""
 
 import logging
 from uuid import uuid4
@@ -31,7 +31,6 @@ log = logging.getLogger(__name__)
 class PostGis:
     """An synchronous database connection.
 
-    Typically called standalone.
     Can reuse an existing upstream connection.
     """
 

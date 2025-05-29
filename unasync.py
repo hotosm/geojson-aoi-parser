@@ -43,6 +43,7 @@ SUBS = [
     ("__aenter__", "__enter__"),
     ("__aexit__", "__exit__"),
     ("__aiter__", "__iter__"),
+    ("asynchronous", "synchronous"),
     # Package specific
     ("AsyncPostGis", "PostGis"),
     ("AsyncConnection", "Connection"),
