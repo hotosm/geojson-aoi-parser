@@ -1,1 +1,1 @@
-"""Async implementation."""
+"""Sync implementation."""
