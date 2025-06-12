@@ -388,7 +388,6 @@ def test_no_warnings_valid_crs(db):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_warnings_raised_invalid_crs(db):
     """Test including an invalid CRS, raising warnings."""
     geojson_data = {
