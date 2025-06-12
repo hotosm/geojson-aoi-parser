@@ -76,7 +76,7 @@ def check_crs(geojson: GeoJSON) -> None:
     coordinates = geom.get("coordinates", [])
 
     # Drill down into nested coordinates to find the first coordinate
-    while isinstance(coordinates, list) and len(coordinates) > 0:
+    while isinstance(coordinates[0], list) and len(coordinates) > 0:
         coordinates = coordinates[0]
 
     if not is_valid_coordinate(coordinates):
