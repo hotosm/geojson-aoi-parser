@@ -357,7 +357,6 @@ def test_file_input(db, tmp_path):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_no_warnings_valid_crs(db):
     """Test including a valid CRS."""
     geojson_data = {
