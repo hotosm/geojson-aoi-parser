@@ -408,7 +408,6 @@ def test_warnings_raised_invalid_crs(db):
         parse_aoi_async(db, geojson_data)
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_warnings_raised_invalid_coords(db):
     """Test including an invalid coordinates, raising warnings."""
     geojson_data = {
