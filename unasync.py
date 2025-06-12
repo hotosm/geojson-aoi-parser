@@ -49,6 +49,7 @@ SUBS = [
     ("AsyncPostGis", "PostGis"),
     ("AsyncConnection", "Connection"),
     ("AsyncCursor", "Cursor"),
+    ("parse_aoi_async", "parse_aoi"),
     # Testing
     ("pytest_asyncio.fixture", "pytest.fixture"),
     ("import pytest_asyncio", ""),

@@ -5,7 +5,7 @@ import warnings
 
 import pytest
 
-from geojson_aoi._sync.parser import parse_aoi
+from geojson_aoi import parse_aoi
 
 
 def is_featcol_nested_polygon(geojson) -> bool:

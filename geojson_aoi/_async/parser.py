@@ -135,7 +135,7 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     return geoms
 
 
-def parse_aoi(
+def parse_aoi_async(
     db: str | Connection, geojson_raw: str | bytes | dict, merge: bool = False
 ) -> FeatureCollection:
     """Parse a GeoJSON file or data struc into a normalized FeatureCollection.
