@@ -56,14 +56,14 @@ class AsyncPostGis:
             for geom in self.geoms:
                 st_functions = self.normalize.get_transformation_funcs(geom)
                 
-                SQL = sql.SQL("""
+                _sql = sql.SQL("""
                         INSERT INTO {} (geometry)
                         VALUES ({});
                     """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
                 
                 data = (Jsonb(geom), )
 
-                await cur.execute(SQL, data)
+                await cur.execute(_sql, data)
 
             # NOTE: Potential future polygon merging feature.
             # if self.merge:
