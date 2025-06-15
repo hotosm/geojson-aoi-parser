@@ -1,7 +1,9 @@
 """Test fixtures."""
 
 import pytest
+
 from geojson_aoi.dbconfig import DbConfig
+
 
 # TODO: Unable to get dummy session to work in pytest, or luke session to work in docker
 @pytest.fixture(scope="session")

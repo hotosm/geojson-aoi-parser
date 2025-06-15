@@ -15,10 +15,10 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-# This script is adapted from the work done by 
+# This script is adapted from the work done by
 # Emir Fabio Cognigni (https://github.com/emirfabio),
-# Sam Woodcock (https://github.com/spwoodcock), and 
-# Stephen Garland (https://github.com/stephanGarland) 
+# Sam Woodcock (https://github.com/spwoodcock), and
+# Stephen Garland (https://github.com/stephanGarland)
 # for the HOT pg-nearest-city module (https://github.com/hotosm/pg-nearest-city).
 
 """Convert async modules to sync equivalents using tokenisation."""
@@ -119,9 +119,7 @@ def main():
 
     if not check_only:
         print("**Files to unasync:**")
-    unasync_dir(
-        "geojson_aoi/_async", "geojson_aoi/_sync", check_only=check_only
-    )
+    unasync_dir("geojson_aoi/_async", "geojson_aoi/_sync", check_only=check_only)
     unasync_dir("tests/_async", "tests/_sync", check_only=check_only)
 
     if len(USED_SUBS) != len(SUBS):

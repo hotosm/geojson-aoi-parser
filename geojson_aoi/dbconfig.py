@@ -17,13 +17,14 @@
 #
 # The code is this file was originally developed by
 # Emir Fabio Cognigni (https://github.com/emirfabio),
-# Sam Woodcock (https://github.com/spwoodcock), and 
-# Stephen Garland (https://github.com/stephanGarland) 
+# Sam Woodcock (https://github.com/spwoodcock), and
+# Stephen Garland (https://github.com/stephanGarland)
 # for the HOT pg-nearest-city module (https://github.com/hotosm/pg-nearest-city).
 
 import os
 from dataclasses import dataclass
 from typing import Optional
+
 
 @dataclass
 class DbConfig:

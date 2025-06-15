@@ -22,8 +22,8 @@ from uuid import uuid4
 from psycopg import Connection, connect, sql
 from psycopg.types.json import Jsonb
 
-from geojson_aoi.types import GeoJSON
 from geojson_aoi.normalize import Normalize
+from geojson_aoi.types import GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class PostGis:
 
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
-            
+
             for geom in self.geoms:
                 st_functions = self.normalize.get_transformation_funcs(geom)
                 
@@ -60,8 +60,8 @@ class PostGis:
                         INSERT INTO {} (geometry)
                         VALUES ({});
                     """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-                
-                data = (Jsonb(geom), )
+
+                data = (Jsonb(geom),)
 
                 cur.execute(_sql, data)
 
