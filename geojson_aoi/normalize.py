@@ -39,14 +39,12 @@ class Normalize:
     def get_transformation_funcs(geom: GeoJSON) -> str:
         """Construct and return string of functions that correspond with given geom."""
         # ST_Force2D strings z-coordinates
-        val = (
-            "ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))"
-        )
+        val = "ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))"
         # ST_CollectionExtract converts any GeometryCollections
         # into MultiXXX geoms
         if geom.get("type") == "GeometryCollection":
             val = f"ST_CollectionExtract({val})"
-    
+
         # ST_Dump extracts all MultiXXX geoms to single geom equivalents
         # TODO ST_Dump (complex, as it returns multiple geometries!)
 
