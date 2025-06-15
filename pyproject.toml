@@ -59,6 +59,10 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+pythonpath = [
+    "geojson_aoi",
+    "."
+]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
