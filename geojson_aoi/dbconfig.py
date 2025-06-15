@@ -21,6 +21,8 @@
 # Stephen Garland (https://github.com/stephanGarland)
 # for the HOT pg-nearest-city module (https://github.com/hotosm/pg-nearest-city).
 
+"""Database config for Postgres."""
+
 import os
 from dataclasses import dataclass
 from typing import Optional
