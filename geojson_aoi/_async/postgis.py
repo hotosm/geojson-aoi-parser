@@ -57,7 +57,7 @@ class AsyncPostGis:
 
             for geom in self.geoms:
                 st_functions = self.normalize.get_transformation_funcs(geom)
-                
+
                 _sql = sql.SQL("""
                         INSERT INTO {} (geometry)
                         VALUES ({});
