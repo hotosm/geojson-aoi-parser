@@ -33,6 +33,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      - POSTGRES_USER=aoi
+      - POSTGRES_PASSWORD=dummycipassword
+      - POSTGRES_DB=aoi
+      - GEOJSON_AOI_DB_NAME=aoi
+      - GEOJSON_AOI_DB_USER=aoi
+      - GEOJSON_AOI_DB_PASSWORD=dummycipassword
+      - GEOJSON_AOI_DB_HOST=db
+      - GEOJSON_AOI_DB_PORT=5432
     networks:
       - net
     restart: "no"
