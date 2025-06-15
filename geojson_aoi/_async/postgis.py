@@ -22,8 +22,8 @@ from uuid import uuid4
 from psycopg import AsyncConnection, connect, sql
 from psycopg.types.json import Jsonb
 
-from geojson_aoi.types import GeoJSON
 from geojson_aoi.normalize import Normalize
+from geojson_aoi.types import GeoJSON
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +34,9 @@ class AsyncPostGis:
     Can reuse an existing upstream connection.
     """
 
-    async def __init__(self, db: str | AsyncConnection, geoms: list[GeoJSON], merge: bool = False):
+    async def __init__(
+        self, db: str | AsyncConnection, geoms: list[GeoJSON], merge: bool = False
+    ):
         """Initialise variables and compose classes."""
         self.table_id = uuid4().hex
         self.geoms = geoms
@@ -52,16 +54,16 @@ class AsyncPostGis:
 
         async with self.connection.cursor() as cur:
             await cur.execute(self.normalize.init_table(self.table_id))
-            
+
             for geom in self.geoms:
                 st_functions = self.normalize.get_transformation_funcs(geom)
-                
+
                 SQL = sql.SQL("""
                         INSERT INTO {} (geometry)
                         VALUES ({});
                     """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-                
-                data = (Jsonb(geom), )
+
+                data = (Jsonb(geom),)
 
                 await cur.execute(SQL, data)
 

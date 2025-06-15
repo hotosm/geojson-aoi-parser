@@ -207,5 +207,5 @@ def parse_aoi_async(
             for feature in result.featcol["features"]:
                 feature["properties"] = properties[feat_count]
                 feat_count = feat_count + 1
-                
+
         return result.featcol

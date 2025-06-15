@@ -15,7 +15,9 @@
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
 """Support methods to nomalize GeoJSON inputs."""
+
 from geojson_aoi.types import GeoJSON
+
 
 class Normalize:
     """Normalise the geometry.
@@ -111,4 +113,3 @@ class Normalize:
     #
     #    """
     #    return val
-
