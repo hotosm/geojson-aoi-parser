@@ -5,7 +5,7 @@ import warnings
 
 import pytest
 
-from geojson_aoi.parser import parse_aoi
+from geojson_aoi._sync.parser import parse_aoi
 
 
 def is_featcol_nested_polygon(geojson) -> bool:
@@ -357,7 +357,6 @@ def test_file_input(db, tmp_path):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_no_warnings_valid_crs(db):
     """Test including a valid CRS."""
     geojson_data = {
@@ -389,7 +388,6 @@ def test_no_warnings_valid_crs(db):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_warnings_raised_invalid_crs(db):
     """Test including an invalid CRS, raising warnings."""
     geojson_data = {
@@ -410,7 +408,6 @@ def test_warnings_raised_invalid_crs(db):
         parse_aoi(db, geojson_data)
 
 
-@pytest.mark.skip(reason="Feature a WIP")
 def test_warnings_raised_invalid_coords(db):
     """Test including an invalid coordinates, raising warnings."""
     geojson_data = {
