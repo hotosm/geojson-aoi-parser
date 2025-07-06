@@ -57,8 +57,7 @@
   - GeometryCollection
   - Feature
   - FeatureCollection
-- Handle multigeometries with an optional merge to single polygon, or split into
-  featcol of individual polygons.
+- Splits multipolygons into featcol of individual polygons.
 - Handle geometries nested inside GeometryCollection.
 - Remove any z-dimension coordinates.
 - Warn user if CRS is provided, in a coordinate system other than EPSG:4326.
@@ -68,6 +67,70 @@
 
 If the GeoJSON has an invalid CRS, or coordinates seem off, a warning
 will be raised.
+
+To install:
+
+```bash
+pip install geojson-aoi-parser
+```
+
+Basic example:
+
+```python
+from geojson_aoi import parse_aoi
+
+polygon_geojson = {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+    }
+
+# Where 'db' is some upstream database connection.
+feat_col = parse_aoi(db, polygon_geojson)
+
+print(feat_col)
+# {
+#   'type': 'FeatureCollection',
+#   'features': [
+#       {
+#           'type': 'Feature', 
+#           'geometry': 
+#               {
+#                   'type': 'Polygon', 
+#                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+#                }
+#        }
+#     ]
+# }
+```
+
+Basic async example:
+
+```python
+from geojson_aoi import parse_aoi_async
+
+polygon_geojson = {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+    }
+
+# Where 'db' is some upstream database connection.
+feat_col = parse_aoi_async(db, polygon_geojson)
+
+print(feat_col)
+# {
+#   'type': 'FeatureCollection',
+#   'features': [
+#       {
+#           'type': 'Feature', 
+#           'geometry': 
+#               {
+#                   'type': 'Polygon', 
+#                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+#                }
+#        }
+#     ]
+# }
+```
 
 To halt execution when a warning is raised and act on it:
 
