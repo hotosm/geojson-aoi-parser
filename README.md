@@ -165,7 +165,7 @@ Create a New DB Connection
 - If you require a new database connection, the connection parameters can be
   defined as DbConfig object variables:
 
-'''python
+```python
 from geojson_aoi import parse_aoi, DbConfig
 
 db = DbConfig(
@@ -177,25 +177,25 @@ db = DbConfig(
 )
 
 featcol = parse_aoi(db, raw_geojson)
-'''
+```
 
 - Or alternatively as variables from your system environment:
 
-'''bash
+```bash
 GEOJSON_AOI_DB_NAME=aoi
 GEOJSON_AOI_DB_USER=aoi
 GEOJSON_AOI_DB_PASSWORD=pass
 GEOJSON_AOI_DB_HOST=localhost
 GEOJSON_AOI_DB_PORT=5432
-'''
+```
 
 then
 
-'''python
+```python
 from geojson_aoi import parse_aoi
 
 featcol = parse_aoi(db, raw_geojson)
-'''
+```
 
 ((All credit for DbConfig goes to <https://github.com/hotosm/pg-nearest-city/>))
 
