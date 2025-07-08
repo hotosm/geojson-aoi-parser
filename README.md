@@ -57,8 +57,7 @@
   - GeometryCollection
   - Feature
   - FeatureCollection
-- Handle multigeometries with an optional merge to single polygon, or split into
-  featcol of individual polygons.
+- Splits multipolygons into featcol of individual polygons.
 - Handle geometries nested inside GeometryCollection.
 - Remove any z-dimension coordinates.
 - Warn user if CRS is provided, in a coordinate system other than EPSG:4326.
@@ -69,11 +68,75 @@
 If the GeoJSON has an invalid CRS, or coordinates seem off, a warning
 will be raised.
 
+To install:
+
+```bash
+pip install geojson-aoi-parser
+```
+
+Basic example:
+
+```python
+from geojson_aoi import parse_aoi
+
+polygon_geojson = {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+    }
+
+# Where 'db' is some upstream database connection.
+feat_col = parse_aoi(db, polygon_geojson)
+
+print(feat_col)
+# {
+#   'type': 'FeatureCollection',
+#   'features': [
+#       {
+#           'type': 'Feature', 
+#           'geometry': 
+#               {
+#                   'type': 'Polygon', 
+#                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+#                }
+#        }
+#     ]
+# }
+```
+
+Basic async example:
+
+```python
+from geojson_aoi import parse_aoi_async
+
+polygon_geojson = {
+        "type": "Polygon",
+        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+    }
+
+# Where 'db' is some upstream database connection.
+feat_col = parse_aoi_async(db, polygon_geojson)
+
+print(feat_col)
+# {
+#   'type': 'FeatureCollection',
+#   'features': [
+#       {
+#           'type': 'Feature', 
+#           'geometry': 
+#               {
+#                   'type': 'Polygon', 
+#                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
+#                }
+#        }
+#     ]
+# }
+```
+
 To halt execution when a warning is raised and act on it:
 
 ```python
 try:
-    featcol = parse_aoi(raw_geojson)
+    featcol = parse_aoi(db, raw_geojson)
 except UserWarning as warning:
     log.error(warning.message)
     msg = "Using a valid CRS is mandatory!"
@@ -87,7 +150,7 @@ To record warnings, but allow execution to continue:
 import warnings
 
 with warnings.catch_warnings(record=True) as recorded_warnings:
-    featcol = parse_aoi(raw_geojson)
+    featcol = parse_aoi(db, raw_geojson)
 
 if recorded_warnings:
     for warning in recorded_warnings:
@@ -95,6 +158,46 @@ if recorded_warnings:
             # do stuff with warning
             logger.warning(f"A warning was encountered: {warning.message}")
 ```
+
+Create a New DB Connection
+
+- If your app upstream already has a psycopg connection, this can be passed through.
+- If you require a new database connection, the connection parameters can be
+  defined as DbConfig object variables:
+
+```python
+from geojson_aoi import parse_aoi, DbConfig
+
+db = DbConfig(
+    dbname="db1",
+    user="user1",
+    password="pass1",
+    host="localhost",
+    port="5432",
+)
+
+featcol = parse_aoi(db, raw_geojson)
+```
+
+- Or alternatively as variables from your system environment:
+
+```bash
+GEOJSON_AOI_DB_NAME=aoi
+GEOJSON_AOI_DB_USER=aoi
+GEOJSON_AOI_DB_PASSWORD=pass
+GEOJSON_AOI_DB_HOST=localhost
+GEOJSON_AOI_DB_PORT=5432
+```
+
+then
+
+```python
+from geojson_aoi import parse_aoi
+
+featcol = parse_aoi(db, raw_geojson)
+```
+
+((All credit for DbConfig goes to <https://github.com/hotosm/pg-nearest-city/>))
 
 ## History
 
