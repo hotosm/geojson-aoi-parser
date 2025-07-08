@@ -159,6 +159,46 @@ if recorded_warnings:
             logger.warning(f"A warning was encountered: {warning.message}")
 ```
 
+Create a New DB Connection
+
+- If your app upstream already has a psycopg connection, this can be passed through.
+- If you require a new database connection, the connection parameters can be
+  defined as DbConfig object variables:
+
+'''python
+from geojson_aoi import parse_aoi, DbConfig
+
+db = DbConfig(
+    dbname="db1",
+    user="user1",
+    password="pass1",
+    host="localhost",
+    port="5432",
+)
+
+featcol = parse_aoi(db, raw_geojson)
+'''
+
+- Or alternatively as variables from your system environment:
+
+'''bash
+GEOJSON_AOI_DB_NAME=aoi
+GEOJSON_AOI_DB_USER=aoi
+GEOJSON_AOI_DB_PASSWORD=pass
+GEOJSON_AOI_DB_HOST=localhost
+GEOJSON_AOI_DB_PORT=5432
+'''
+
+then
+
+'''python
+from geojson_aoi import parse_aoi
+
+featcol = parse_aoi(db, raw_geojson)
+'''
+
+((All credit for DbConfig goes to <https://github.com/hotosm/pg-nearest-city/>))
+
 ## History
 
 - Initially I tried to write a pure-Python implementation of this, no dependencies.
