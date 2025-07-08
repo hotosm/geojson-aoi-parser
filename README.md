@@ -136,7 +136,7 @@ To halt execution when a warning is raised and act on it:
 
 ```python
 try:
-    featcol = parse_aoi(raw_geojson)
+    featcol = parse_aoi(db, raw_geojson)
 except UserWarning as warning:
     log.error(warning.message)
     msg = "Using a valid CRS is mandatory!"
@@ -150,7 +150,7 @@ To record warnings, but allow execution to continue:
 import warnings
 
 with warnings.catch_warnings(record=True) as recorded_warnings:
-    featcol = parse_aoi(raw_geojson)
+    featcol = parse_aoi(db, raw_geojson)
 
 if recorded_warnings:
     for warning in recorded_warnings:
