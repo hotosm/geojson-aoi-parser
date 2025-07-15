@@ -1,9 +1,10 @@
 [project]
 name = "geojson-aoi-parser"
-version = "0.2.0"
+version = "0.3.0"
 description = "Parse and normalize a GeoJSON area of interest, using PostGIS."
 authors = [
     {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
+    {name = "Luke Everhart", email = "luke.f.everhart@gmail.com"},
 ]
 readme = "README.md"
 license = {text = "GPL-3.0-only"}
