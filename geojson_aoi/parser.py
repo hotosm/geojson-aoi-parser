@@ -152,6 +152,8 @@ def parse_aoi(
     # We want to maintain this list for input control.
     valid_geoms = ["Polygon", "MultiPolygon", "GeometryCollection"]
 
+    print(f"Parsing geojson file: {geojson_raw}")
+
     # Parse different input types
     if isinstance(geojson_raw, bytes):
         geojson_parsed = json.loads(geojson_raw)
