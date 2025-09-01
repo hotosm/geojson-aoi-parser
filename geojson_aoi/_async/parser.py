@@ -24,7 +24,7 @@ from pathlib import Path
 
 from psycopg import AsyncConnection
 
-from geojson_aoi._sync.postgis import PostGis
+from geojson_aoi._async.postgis import AsyncPostGis
 from geojson_aoi.types import Feature, FeatureCollection, GeoJSON
 
 AllowedInputTypes = [
@@ -204,8 +204,8 @@ def parse_aoi_async(
     # Strip away any geom type that isn't a Polygon
     geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
-    with PostGis(db, geoms, merge) as result:
-        # Remove any properties that PostGIS might have assigned.
+    with AsyncPostGis(db, geoms, merge) as result:
+        # Remove any properties that AsyncPostGIS might have assigned.
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
 
