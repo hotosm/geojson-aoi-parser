@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3 (2025-09-01)
+
+- Fix not using AsyncConnection in async parser
+
 ## 0.3.2 (2025-09-01)
 
 - Fix bytes type not parsing
