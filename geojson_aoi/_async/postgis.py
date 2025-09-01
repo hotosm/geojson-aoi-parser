@@ -34,7 +34,7 @@ class AsyncPostGis:
     Can reuse an existing upstream connection.
     """
 
-    async def __init__(
+    def __init__(
         self, db: str | AsyncConnection, geoms: list[GeoJSON], merge: bool = False
     ):
         """Initialise variables and compose classes."""
