@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.4 (2025-09-01)
+
+- Fix Async parser using Sync postgis
+
 ## 0.3.3 (2025-09-01)
 
 - Fix not using AsyncConnection in async parser
