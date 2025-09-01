@@ -164,7 +164,7 @@ def parse_aoi_async(
     if isinstance(geojson_raw, bytes):
         geojson_parsed = json.loads(geojson_raw)
 
-    if isinstance(geojson_raw, str):
+    elif isinstance(geojson_raw, str):
         if Path(geojson_raw).exists():
             log.debug(f"Parsing geojson file: {geojson_raw}")
             with open(geojson_raw, "rb") as geojson_file:
