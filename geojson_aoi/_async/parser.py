@@ -143,7 +143,7 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
     return geoms
 
 
-def parse_aoi_async(
+async def parse_aoi_async(
     db: str | AsyncConnection, geojson_raw: str | bytes | dict, merge: bool = False
 ) -> FeatureCollection:
     """Parse a GeoJSON file or data struc into a normalized FeatureCollection.
@@ -204,7 +204,7 @@ def parse_aoi_async(
     # Strip away any geom type that isn't a Polygon
     geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
 
-    with AsyncPostGis(db, geoms, merge) as result:
+    async with AsyncPostGis(db, geoms, merge) as result:
         # Remove any properties that AsyncPostGIS might have assigned.
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
