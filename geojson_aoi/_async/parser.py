@@ -22,7 +22,7 @@ import logging
 import warnings
 from pathlib import Path
 
-from psycopg import Connection
+from psycopg import AsyncConnection
 
 from geojson_aoi._sync.postgis import PostGis
 from geojson_aoi.types import Feature, FeatureCollection, GeoJSON
@@ -144,12 +144,12 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
 
 
 def parse_aoi_async(
-    db: str | Connection, geojson_raw: str | bytes | dict, merge: bool = False
+    db: str | AsyncConnection, geojson_raw: str | bytes | dict, merge: bool = False
 ) -> FeatureCollection:
     """Parse a GeoJSON file or data struc into a normalized FeatureCollection.
 
     Args:
-        db (str | Connection): Existing db connection, or connection string.
+        db (str | AsyncConnection): Existing db connection, or connection string.
         geojson_raw (str | bytes | dict): GeoJSON file path, JSON string, dict,
             or file bytes.
         merge (bool): If any nested Polygons / MultiPolygon should be merged.
