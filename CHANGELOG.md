@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 (2025-09-01)
+
+- Fix bytes type not parsing
+
 ## 0.3.1 (2025-08-27)
 
 - Fix a defect that was preventing some geojson files from parsing
