@@ -17,11 +17,11 @@ def is_featcol_nested_polygon(geojson) -> bool:
     return False
 
 
-def test_polygon(db, polygon_geojson):
+async def test_polygon(db, polygon_geojson):
     """A single Polygon."""
     result = parse_aoi_async(db, polygon_geojson)
     assert is_featcol_nested_polygon(result)
-    assert len(result["features"]) == 1
+    assert len((await result)["features"]) == 1
 
 
 def test_polygon_with_holes(db, polygon_holes_geojson):
