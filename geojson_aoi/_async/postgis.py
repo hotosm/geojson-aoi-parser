@@ -51,28 +51,31 @@ class AsyncPostGis:
     async def __aenter__(self) -> "AsyncPostGis":
         """Initialise the database via context manager."""
         await self.create_connection()
+        
+        # I assure you that the double-nested-async structure here is neeeded:
+        # https://www.psycopg.org/psycopg3/docs/advanced/async.html#async-with
+        async with self.connection:
+            async with self.connection.cursor() as cur:
+                await cur.execute(self.normalize.init_table(self.table_id))
 
-        async with self.connection.cursor() as cur:
-            await cur.execute(self.normalize.init_table(self.table_id))
+                for geom in self.geoms:
+                    st_functions = self.normalize.get_transformation_funcs(geom)
 
-            for geom in self.geoms:
-                st_functions = self.normalize.get_transformation_funcs(geom)
+                    _sql = sql.SQL("""
+                            INSERT INTO {} (geometry)
+                            VALUES ({});
+                        """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
 
-                _sql = sql.SQL("""
-                        INSERT INTO {} (geometry)
-                        VALUES ({});
-                    """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
+                    data = (Jsonb(geom),)
 
-                data = (Jsonb(geom),)
+                    await cur.execute(_sql, data)
 
-                await cur.execute(_sql, data)
+                # NOTE: Potential future polygon merging feature.
+                # if self.merge:
+                #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
-            # NOTE: Potential future polygon merging feature.
-            # if self.merge:
-            #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
-
-            await cur.execute(self.normalize.query_as_feature_collection(self.table_id))
-            self.featcol = await cur.fetchall()[0][0]
+                await cur.execute(self.normalize.query_as_feature_collection(self.table_id))
+                self.featcol = await cur.fetchall()[0][0]
 
         return self
 
