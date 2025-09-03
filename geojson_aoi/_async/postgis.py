@@ -72,7 +72,7 @@ class AsyncPostGis:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
             await cur.execute(self.normalize.query_as_feature_collection(self.table_id))
-            self.featcol = await cur.fetchall()[0][0]
+            self.featcol = (await cur.fetchall())[0][0]
 
         return self
 
