@@ -19,7 +19,7 @@
 import logging
 from uuid import uuid4
 
-from psycopg import AsyncConnection, connect, sql
+from psycopg import AsyncConnection, sql
 from psycopg.types.json import Jsonb
 
 from geojson_aoi.normalize import Normalize
@@ -87,7 +87,7 @@ class AsyncPostGis:
         """Get a new database connection."""
         # Create new connection
         if isinstance(self.db, str):
-            self.connection = await connect(self.db)
+            self.connection = await AsyncConnection.connect(self.db)
             self.is_new_connection = True
 
         # Reuse existing connection
