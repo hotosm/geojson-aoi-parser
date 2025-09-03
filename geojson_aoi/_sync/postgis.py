@@ -19,7 +19,7 @@
 import logging
 from uuid import uuid4
 
-from psycopg import Connection, connect, sql
+from psycopg import Connection, sql
 from psycopg.types.json import Jsonb
 
 from geojson_aoi.normalize import Normalize
@@ -51,7 +51,7 @@ class PostGis:
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
         self.create_connection()
-
+        
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
 
@@ -62,17 +62,17 @@ class PostGis:
                         INSERT INTO {} (geometry)
                         VALUES ({});
                     """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-
+                
                 data = (Jsonb(geom),)
 
                 cur.execute(_sql, data)
-
+            
             # NOTE: Potential future polygon merging feature.
             # if self.merge:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
 
             cur.execute(self.normalize.query_as_feature_collection(self.table_id))
-            self.featcol = cur.fetchall()[0][0]
+            self.featcol = (cur.fetchall())[0][0]
 
         return self
 
@@ -84,7 +84,7 @@ class PostGis:
         """Get a new database connection."""
         # Create new connection
         if isinstance(self.db, str):
-            self.connection = connect(self.db)
+            self.connection = Connection.connect(self.db)
             self.is_new_connection = True
 
         # Reuse existing connection
