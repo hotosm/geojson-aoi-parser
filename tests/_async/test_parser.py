@@ -4,7 +4,6 @@ import json
 import warnings
 
 import pytest
-import pytest_asyncio
 
 from geojson_aoi._async.parser import parse_aoi_async
 
@@ -448,7 +447,10 @@ async def test_warnings_raised_invalid_coords(db):
                 "properties": {},
             }
         ],
-        "crs": {"type": "name", "properties": {"name": "urn:ogc:async def:crs:EPSG::4326"}},
+        "crs": {
+            "type": "name",
+            "properties": {"name": "urn:ogc:async def:crs:EPSG::4326"},
+        },
     }
     with pytest.warns(UserWarning):
         await parse_aoi_async(db, geojson_data)

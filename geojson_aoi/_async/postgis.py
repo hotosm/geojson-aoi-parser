@@ -51,7 +51,7 @@ class AsyncPostGis:
     async def __aenter__(self) -> "AsyncPostGis":
         """Initialise the database via context manager."""
         await self.create_connection()
-        
+
         async with self.connection.cursor() as cur:
             await cur.execute(self.normalize.init_table(self.table_id))
 
@@ -62,11 +62,11 @@ class AsyncPostGis:
                         INSERT INTO {} (geometry)
                         VALUES ({});
                     """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-                
+
                 data = (Jsonb(geom),)
 
                 await cur.execute(_sql, data)
-            
+
             # NOTE: Potential future polygon merging feature.
             # if self.merge:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
