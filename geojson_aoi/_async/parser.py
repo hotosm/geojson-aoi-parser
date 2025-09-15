@@ -209,6 +209,9 @@ async def parse_aoi_async(
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
 
+        # TODO: Parser breaks when properties and result.featcol['features'] arent't equal
+        #print(f"Properties: {len(properties)}\n Results: {len(result.featcol['features'])}")
+
         # Restore saved properties.
         if properties:
             feat_count = 0
