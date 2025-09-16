@@ -7,7 +7,6 @@ import pytest
 
 from geojson_aoi._async.parser import parse_aoi_async
 
-pytestmark = pytest.mark.asyncio
 
 def is_featcol_nested_polygon(geojson) -> bool:
     """Check if the data is a FeatureCollection with nested Polygon."""
@@ -25,7 +24,6 @@ async def test_polygon(db, polygon_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_polygon_with_holes(db, polygon_holes_geojson):
     """A single Polygon with holes, should remain unchanged."""
     result = await parse_aoi_async(db, polygon_holes_geojson)
@@ -35,7 +33,6 @@ async def test_polygon_with_holes(db, polygon_holes_geojson):
     assert len(result["features"][0]["geometry"]["coordinates"]) == 3
 
 
-@pytest.mark.asyncio
 @pytest.mark.skip(reason="Test case for future feature.")
 async def test_polygon_merge_with_holes(db, polygon_holes_geojson):
     """A single Polygon with holes, where the holes should be removed."""
@@ -46,7 +43,6 @@ async def test_polygon_merge_with_holes(db, polygon_holes_geojson):
     assert len(result["features"][0]["geometry"]["coordinates"]) == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.skip(reason="Test case for future feature.")
 async def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
     """Merge overlapping polygons within multipolygon."""
@@ -54,7 +50,6 @@ async def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_z_dimension_polygon(db, polygon_geojson):
     """A single Polygon, with z-dimension coord stripped out."""
     geojson_data = {
@@ -70,7 +65,6 @@ async def test_z_dimension_polygon(db, polygon_geojson):
     }
 
 
-@pytest.mark.asyncio
 async def test_feature(db, feature_geojson):
     """A Polygon nested in a Feature."""
     result = await parse_aoi_async(db, feature_geojson)
@@ -78,7 +72,6 @@ async def test_feature(db, feature_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_feature_collection(db, featcol_geojson):
     """A Polygon nested in a Feature, inside a FeatureCollection."""
     result = await parse_aoi_async(db, featcol_geojson)
@@ -86,7 +79,6 @@ async def test_feature_collection(db, featcol_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_feature_collection_multiple_geoms(db, feature_geojson):
     """Multiple Polygon nested in Features, inside a FeatureCollection.
 
@@ -101,7 +93,6 @@ async def test_feature_collection_multiple_geoms(db, feature_geojson):
     assert len(result["features"]) == 3
 
 
-@pytest.mark.asyncio
 async def test_nested_geometrycollection(db, geomcol_geojson):
     """A GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {
@@ -119,7 +110,6 @@ async def test_nested_geometrycollection(db, geomcol_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_multiple_nested_geometrycollection(db, geomcol_geojson):
     """Multiple GeometryCollection nested inside a FeatureCollection."""
     geojson_data = {
@@ -155,7 +145,6 @@ async def test_multiple_nested_geometrycollection(db, geomcol_geojson):
 #     assert len(result["features"]) == 3
 
 
-@pytest.mark.asyncio
 @pytest.mark.skip(reason="We are not doing the merge feature for now.")
 async def test_featcol_merge_multiple_polygons(db):
     """Merge multiple polygons inside a FeatureCollection."""
@@ -185,7 +174,6 @@ async def test_featcol_merge_multiple_polygons(db):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_featcol_no_merge_polygons(db):
     """Do not merge multiple polygons inside a FeatureCollection."""
     geojson_data = {
@@ -214,7 +202,6 @@ async def test_featcol_no_merge_polygons(db):
     assert len(result["features"]) == 2
 
 
-@pytest.mark.asyncio
 @pytest.mark.skip(reason="We are not doing the merge feature for now.")
 async def test_merge_multipolygon(db, multipolygon_geojson):
     """Merge multiple polygons inside a MultiPolygon."""
@@ -228,7 +215,6 @@ async def test_merge_multipolygon(db, multipolygon_geojson):
     # assert False
 
 
-@pytest.mark.asyncio
 async def test_multipolygon_no_merge(db, multipolygon_geojson):
     """Do not merge multiple polygons inside a MultiPolygon."""
     result = await parse_aoi_async(db, multipolygon_geojson)
@@ -236,7 +222,6 @@ async def test_multipolygon_no_merge(db, multipolygon_geojson):
     assert len(result["features"]) == 3
 
 
-@pytest.mark.asyncio
 async def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     """MultiPolygon --> Polygon, with holes remaining."""
     # FIXME this should not removed the holes from the polygon geom
@@ -247,7 +232,6 @@ async def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.skip(reason="We are not doing the merge feature for now.")
 async def test_multipolygon_with_holes_merged(db, multipolygon_holes_geojson):
     """Merge multipolygon, including holes."""
@@ -256,7 +240,6 @@ async def test_multipolygon_with_holes_merged(db, multipolygon_holes_geojson):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_feature_with_property(db, feature_with_property_geojson):
     """Test a Feature with a single property."""
     result = await parse_aoi_async(db, feature_with_property_geojson)
@@ -266,7 +249,6 @@ async def test_feature_with_property(db, feature_with_property_geojson):
         assert feature["properties"] == feature_with_property_geojson["properties"]
 
 
-@pytest.mark.asyncio
 async def test_featcol_different_properties(
     db, feature_with_property_geojson, feature_with_properties_geojson
 ):
@@ -291,7 +273,6 @@ async def test_featcol_different_properties(
     )
 
 
-@pytest.mark.asyncio
 async def test_geometrycollection_mixed_geoms(db, geometrycollection_mixed_geoms):
     """Test a GeometryCollection that contains all kinds of geoms."""
     result = await parse_aoi_async(db, geometrycollection_mixed_geoms)
@@ -312,7 +293,6 @@ async def test_geometrycollection_mixed_geoms(db, geometrycollection_mixed_geoms
     }
 
 
-@pytest.mark.asyncio
 async def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
     """Test a FeatureCollection that contains all kinds of geoms."""
     result = await parse_aoi_async(db, featurecollection_mixed_geoms)
@@ -340,7 +320,6 @@ async def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
     }
 
 
-@pytest.mark.asyncio
 async def test_invalid_input(db):
     """Invalud input for parse_aoi_async function."""
     with pytest.raises(
@@ -355,7 +334,6 @@ async def test_invalid_input(db):
         await parse_aoi_async(db, {"type": "Point"})
 
 
-@pytest.mark.asyncio
 async def test_file_input(db, tmp_path):
     """GeoJSON file input for parse_aoi_async function."""
     geojson_file = tmp_path / "test.geojson"
@@ -379,7 +357,6 @@ async def test_file_input(db, tmp_path):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_no_warnings_valid_crs(db):
     """Test including a valid CRS."""
     geojson_data = {
@@ -411,7 +388,6 @@ async def test_no_warnings_valid_crs(db):
     assert len(result["features"]) == 1
 
 
-@pytest.mark.asyncio
 async def test_warnings_raised_invalid_crs(db):
     """Test including an invalid CRS, raising warnings."""
     geojson_data = {
@@ -432,7 +408,6 @@ async def test_warnings_raised_invalid_crs(db):
         await parse_aoi_async(db, geojson_data)
 
 
-@pytest.mark.asyncio
 async def test_warnings_raised_invalid_coords(db):
     """Test including an invalid coordinates, raising warnings."""
     geojson_data = {
