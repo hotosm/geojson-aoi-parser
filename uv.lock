@@ -126,7 +126,6 @@ version = "0.3.4"
 source = { editable = "." }
 dependencies = [
     { name = "psycopg" },
-    { name = "pytest-asyncio" },
 ]
 
 [package.dev-dependencies]
@@ -139,13 +138,11 @@ docs = [
 ]
 test = [
     { name = "pytest" },
+    { name = "pytest-asyncio" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "psycopg", specifier = ">=3.1" },
-    { name = "pytest-asyncio", specifier = ">=1.1.0" },
-]
+requires-dist = [{ name = "psycopg", specifier = ">=3.1" }]
 
 [package.metadata.requires-dev]
 docs = [
@@ -155,7 +152,10 @@ docs = [
     { name = "mkdocs-material", specifier = ">=9.5.49" },
     { name = "mkdocstrings-python", specifier = ">=1.13.0" },
 ]
-test = [{ name = "pytest", specifier = ">=8.3.4" }]
+test = [
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-asyncio", specifier = ">=1.1.0" },
+]
 
 [[package]]
 name = "ghp-import"
