@@ -4,9 +4,11 @@ import json
 import warnings
 
 import pytest
+import pytest_asyncio
 
 from geojson_aoi._async.parser import parse_aoi_async
 
+pytestmark = pytest.mark.asyncio
 
 def is_featcol_nested_polygon(geojson) -> bool:
     """Check if the data is a FeatureCollection with nested Polygon."""
@@ -17,7 +19,6 @@ def is_featcol_nested_polygon(geojson) -> bool:
     return False
 
 
-@pytest.mark.asyncio
 async def test_polygon(db, polygon_geojson):
     """A single Polygon."""
     result = await parse_aoi_async(db, polygon_geojson)
