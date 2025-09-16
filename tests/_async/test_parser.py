@@ -3,14 +3,9 @@
 import json
 import warnings
 
-import pytest_asyncio
+import pytest
 
 from geojson_aoi._async.parser import parse_aoi_async
-
-
-@pytest_asyncio.fixture
-async def async_test():
-    yield "out"
 
 
 def is_featcol_nested_polygon(geojson) -> bool:
