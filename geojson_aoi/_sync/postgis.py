@@ -34,9 +34,7 @@ class PostGis:
     Can reuse an existing upstream connection.
     """
 
-    def __init__(
-        self, db: str | Connection, geoms: list[GeoJSON], merge: bool = False
-    ):
+    def __init__(self, db: str | Connection, geoms: list[GeoJSON], merge: bool = False):
         """Initialise variables and compose classes."""
         self.table_id = uuid4().hex
         self.geoms = geoms
@@ -51,7 +49,7 @@ class PostGis:
     def __enter__(self) -> "PostGis":
         """Initialise the database via context manager."""
         self.create_connection()
-        
+
         with self.connection.cursor() as cur:
             cur.execute(self.normalize.init_table(self.table_id))
 
@@ -62,11 +60,11 @@ class PostGis:
                         INSERT INTO {} (geometry)
                         VALUES ({});
                     """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-                
+
                 data = (Jsonb(geom),)
 
                 cur.execute(_sql, data)
-            
+
             # NOTE: Potential future polygon merging feature.
             # if self.merge:
             #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
