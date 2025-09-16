@@ -4,7 +4,6 @@ import json
 import warnings
 
 import pytest
-import pytest_asyncio
 
 from geojson_aoi._async.parser import parse_aoi_async
 
