@@ -9,7 +9,6 @@ from geojson_aoi.dbconfig import DbConfig
 @pytest.fixture(scope="session")
 def db():
     """Database URI."""
-    # return "postgresql://aoi:dummycipassword@db:5432/aoi"
     return DbConfig().get_connection_string()
 
 
