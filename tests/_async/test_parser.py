@@ -320,6 +320,7 @@ async def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
         ],
     }
 
+# TODO: Add test case for FeatureCollection with a mix of features with properties
 
 async def test_invalid_input(db):
     """Invalud input for parse_aoi_async function."""
