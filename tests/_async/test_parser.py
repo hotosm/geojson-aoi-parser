@@ -4,7 +4,6 @@ import json
 import warnings
 
 import pytest
-import pytest_asyncio
 
 from geojson_aoi._async.parser import parse_aoi_async
 
@@ -320,7 +319,9 @@ async def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
         ],
     }
 
+
 # TODO: Add test case for FeatureCollection with a mix of features with properties
+
 
 async def test_invalid_input(db):
     """Invalud input for parse_aoi_async function."""
