@@ -1,18 +1,18 @@
 """Test fixtures."""
 
-import pytest
+import pytest_asyncio
 
 from geojson_aoi.dbconfig import DbConfig
 
 
 # TODO: Unable to get dummy session to work in pytest, or luke session to work in docker
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 def db():
     """Database URI."""
     return DbConfig().get_connection_string()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def polygon_geojson():
     """Polygon."""
     return {
@@ -21,7 +21,7 @@ def polygon_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def polygon_holes_geojson():
     """Polygon with holes."""
     return {
@@ -52,7 +52,7 @@ def polygon_holes_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def multipolygon_geojson():
     """MultiPolygon, three separate polygons."""
     return {
@@ -71,7 +71,7 @@ def multipolygon_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def multipolygon_holes_geojson():
     """MultiPolygon with holes.
 
@@ -107,7 +107,7 @@ def multipolygon_holes_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def polygon_overlaps_geojson():
     """Polygon with overlapping polygons."""
     return {
@@ -136,7 +136,7 @@ def polygon_overlaps_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def feature_geojson():
     """Feature."""
     return {
@@ -149,7 +149,7 @@ def feature_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def featcol_geojson():
     """FeatureCollection."""
     return {
@@ -167,7 +167,7 @@ def featcol_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def geomcol_geojson():
     """GeometryCollection."""
     return {
@@ -181,7 +181,7 @@ def geomcol_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def feature_with_property_geojson():
     """Feature with a single property."""
     return {
@@ -194,7 +194,7 @@ def feature_with_property_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def feature_with_properties_geojson():
     """Feature with multiple properties."""
     return {
@@ -207,7 +207,7 @@ def feature_with_properties_geojson():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def geometrycollection_mixed_geoms():
     """GeometryCollection that contains all kinds of geoms."""
     return {
@@ -256,7 +256,7 @@ def geometrycollection_mixed_geoms():
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def featurecollection_mixed_geoms():
     """FeatureCollection with different geom types."""
     return {
