@@ -65,7 +65,7 @@ services:
       - net
     restart: "unless-stopped"
     healthcheck:
-      test: pg_isready -U ${FMTM_DB_USER:-aoi} -d ${FMTM_DB_NAME:-aoi}
+      test: pg_isready -U aoi -d aoi
       start_period: 5s
       interval: 10s
       timeout: 5s
