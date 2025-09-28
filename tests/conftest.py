@@ -6,7 +6,7 @@ from geojson_aoi.dbconfig import DbConfig
 
 
 # TODO: Unable to get dummy session to work in pytest, or luke session to work in docker
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture()
 def db():
     """Database URI."""
     return DbConfig().get_connection_string()

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 
 [[package]]
@@ -126,7 +126,6 @@ version = "0.3.4"
 source = { editable = "." }
 dependencies = [
     { name = "psycopg" },
-    { name = "pytest-asyncio" },
 ]
 
 [package.dev-dependencies]
@@ -143,10 +142,7 @@ test = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "psycopg", specifier = ">=3.1" },
-    { name = "pytest-asyncio", specifier = ">=1.1.0" },
-]
+requires-dist = [{ name = "psycopg", specifier = ">=3.1" }]
 
 [package.metadata.requires-dev]
 docs = [

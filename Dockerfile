@@ -125,6 +125,8 @@ USER appuser
 FROM runtime AS ci
 COPY --from=uv /uv /usr/local/bin/uv
 COPY . /_lock/
+# Ensure pytest config is present
+COPY pyproject.toml uv.lock README.md /data/
 RUN --mount=type=cache,target=/root/.cache <<EOT
     uv sync \
         --project /_lock \
