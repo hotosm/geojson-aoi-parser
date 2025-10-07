@@ -13,5 +13,6 @@ jobs:
   pytest:
     uses: hotosm/gh-workflows/.github/workflows/just.yml@3.3.2
     with:
+      environment: "test"
       command: "test"
     secrets: inherit
