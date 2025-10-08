@@ -195,8 +195,22 @@ def parse_aoi(
 
     elif geojson_parsed.get("type") == "FeatureCollection":
         for feature in geojson_parsed.get("features"):
-            if feature["geometry"]["type"] in valid_geoms:
+
+            # Append a copy of the properties list for each coordinate set
+            # in the MultiPolygon. This ensures the split Polygons maintain
+            # these properties.
+            if feature["geometry"]["type"] == "MultiPolygon":
+                for coordinate in feature["geometry"]["coordinates"]:
+                    properties.append(feature["properties"])
+
+            elif feature["geometry"]["type"] in valid_geoms:
                 properties.append(feature["properties"])
+
+    # The same MultiPolygon handling as before. But applied to top-level MultiPolyons
+    elif geojson_parsed.get("type") == "MultiPolygon":
+        if feature["geometry"]["type"] == "MultiPolygon":
+                for coordinate in feature.get("coordinates"):
+                    properties.append(feature["properties"])
 
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
@@ -208,6 +222,9 @@ def parse_aoi(
         # Remove any properties that PostGIS might have assigned.
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
+ 
+        # TODO: Parser breaks when properties and result.featcol['features'] arent't equal
+        # print(f"Properties: {len(properties)}\n Results: {len(result.featcol['features'])}")
 
         # Restore saved properties.
         if properties:

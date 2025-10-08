@@ -320,7 +320,11 @@ async def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
     }
 
 
-# TODO: Add test case for FeatureCollection with a mix of features with properties
+async def test_featurecollection_multi_props(db, featurecollection_multipolygon_properties):
+    """Test a FeatureCollection that contatins a MultiPolygon Feature with properties."""
+    result = await parse_aoi_async(db, featurecollection_multipolygon_properties)
+
+    assert result["features"]["properties"] == {"id": 1}
 
 
 async def test_invalid_input(db):

@@ -320,6 +320,13 @@ def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
     }
 
 
+def test_featurecollection_multi_props(db, featurecollection_multipolygon_properties):
+    """Test a FeatureCollection that contatins a MultiPolygon Feature with properties."""
+    result = parse_aoi(db, featurecollection_multipolygon_properties)
+
+    assert result["features"]["properties"] == {"id": 1}
+
+
 def test_invalid_input(db):
     """Invalud input for parse_aoi function."""
     with pytest.raises(
@@ -422,7 +429,10 @@ def test_warnings_raised_invalid_coords(db):
                 "properties": {},
             }
         ],
-        "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::4326"}},
+        "crs": {
+            "type": "name",
+            "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+        },
     }
     with pytest.warns(UserWarning):
         parse_aoi(db, geojson_data)
