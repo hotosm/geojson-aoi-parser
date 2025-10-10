@@ -71,6 +71,7 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.3.4"
+version_provider = "uv"
 version_files = [
     "pyproject.toml:version",
     "geojson_aoi/__version__.py",
