@@ -70,16 +70,32 @@ def check_crs(geojson: GeoJSON) -> None:
         log.warning(warning_msg)
         warnings.warn(UserWarning(warning_msg), stacklevel=2)
 
-    geom = geojson.get("geometry") or geojson.get("features", [{}])[-1].get(
-        "geometry", {}
-    )
+    geom = {}
+    if "geometry" in geojson and geojson.get("geometry") is not None:
+        geom = geojson.get("geometry", {})
+    else:
+        features = geojson.get("features", [])
+        if features:
+            geom = features[-1].get("geometry", {}) or {}
+        else:
+            geom = {}
+
     coordinates = geom.get("coordinates", [])
 
     # Drill down into nested coordinates to find the first coordinate
-    while isinstance(coordinates[0], list) and len(coordinates) > 0:
+    # Guard against empty coordinate lists
+    while (
+        isinstance(coordinates, list)
+        and len(coordinates) > 0
+        and isinstance(coordinates[0], list)
+    ):
         coordinates = coordinates[0]
 
-    if not is_valid_coordinate(coordinates):
+    if (
+        not isinstance(coordinates, list)
+        or not coordinates
+        or not is_valid_coordinate(coordinates)
+    ):
         warning_msg = "Invalid coordinates in GeoJSON. Ensure the file is not empty."
         log.warning(warning_msg)
         warnings.warn(UserWarning(warning_msg), stacklevel=2)
@@ -100,40 +116,41 @@ def strip_featcol(geojson_obj: GeoJSON | Feature | FeatureCollection) -> list[Ge
 
     geojson_type = geojson_obj.get("type")
 
+    # Helper to create polygon from a sequence of coordinates (for MultiPolygon)
+    def polygon_from_coords(coords):
+        return {"type": "Polygon", "coordinates": coords}
+
     if geojson_type == "FeatureCollection":
-        geoms = [feature["geometry"] for feature in geojson_obj.get("features", [])]
+        geoms = []
+        for feature in geojson_obj.get("features", []):
+            geom = feature.get("geometry", {})
+            if not geom:
+                continue
 
-        # Drill in and check if each feature is a GeometryCollection or MultiPolygon.
-        # If so, our work isn't done.
-        temp_geoms = []
-        for geom in geoms:
-            if geom["type"] == "GeometryCollection":
-                for item in geom["geometries"]:
-                    temp_geoms.append(item)
-
-                geoms = temp_geoms
-
-            if geom["type"] == "MultiPolygon":
-                for coordinate in geom.get("coordinates"):
-                    # Build a Polygon from scratch out of the coordinates.
-                    polygon = {"type": "Polygon", "coordinates": coordinate}
-                    temp_geoms.append(polygon)
-
-                geoms = temp_geoms
+            gtype = geom.get("type")
+            if gtype == "GeometryCollection":
+                # extend with contained geometries
+                for item in geom.get("geometries", []):
+                    if item:
+                        geoms.append(item)
+            elif gtype == "MultiPolygon":
+                # split MultiPolygon into separate Polygons
+                for coordinate in geom.get("coordinates", []):
+                    geoms.append(polygon_from_coords(coordinate))
+            else:
+                geoms.append(geom)
 
     elif geojson_type == "Feature":
         geoms = [geojson_obj.get("geometry")]
 
     elif geojson_type == "GeometryCollection":
-        geoms = geojson_obj.get("geometries")
+        geoms = geojson_obj.get("geometries", [])
 
     elif geojson_type == "MultiPolygon":
         # MultiPolygon should parse out into List of Polygons and maintain properties.
         temp_geoms = []
-        for coordinate in geojson_obj.get("coordinates"):
-            # Build a Polygon from scratch out of the coordinates.
-            polygon = {"type": "Polygon", "coordinates": coordinate}
-            temp_geoms.append(polygon)
+        for coordinate in geojson_obj.get("coordinates", []):
+            temp_geoms.append({"type": "Polygon", "coordinates": coordinate})
 
         geoms = temp_geoms
 
@@ -189,49 +206,57 @@ def parse_aoi(
     properties = []
     if (
         geojson_parsed.get("type") == "Feature"
-        and geojson_parsed.get("geometry")["type"] in valid_geoms
+        and geojson_parsed.get("geometry")
+        and geojson_parsed.get("geometry").get("type") in valid_geoms
     ):
         properties.append(geojson_parsed.get("properties"))
 
     elif geojson_parsed.get("type") == "FeatureCollection":
-        for feature in geojson_parsed.get("features"):
+        for feature in geojson_parsed.get("features", []):
+            geom = feature.get("geometry", {})
+            gtype = geom.get("type")
             # Append a copy of the properties list for each coordinate set
             # in the MultiPolygon. This ensures the split Polygons maintain
             # these properties.
-            if feature["geometry"]["type"] == "MultiPolygon":
-                for _coordinate in feature["geometry"]["coordinates"]:
-                    properties.append(feature["properties"])
+            if gtype == "MultiPolygon":
+                for _coordinate in geom.get("coordinates", []):
+                    properties.append(feature.get("properties"))
+            elif gtype in valid_geoms:
+                properties.append(feature.get("properties"))
 
-            elif feature["geometry"]["type"] in valid_geoms:
-                properties.append(feature["properties"])
-
-    # The same MultiPolygon handling as before. But applied to top-level MultiPolyons
+    # The same MultiPolygon handling as before.
+    # But applied to top-level MultiPolygons.
     elif geojson_parsed.get("type") == "MultiPolygon":
-        if feature["geometry"]["type"] == "MultiPolygon":
-            for _coordinate in feature.get("coordinates"):
-                properties.append(feature["properties"])
+        # If the top-level MultiPolygon object carries properties,
+        # reuse them for each polygon.
+        top_props = geojson_parsed.get("properties")
+        for _coordinate in geojson_parsed.get("coordinates", []):
+            properties.append(top_props)
 
-    # Extract from FeatureCollection
+    # Extract from FeatureCollection (or other types) into a
+    # list of Polygon geometries
     geoms = strip_featcol(geojson_parsed)
 
     # Strip away any geom type that isn't a Polygon
-    geoms = [geom for geom in geoms if geom["type"] == "Polygon"]
+    geoms = [geom for geom in geoms if geom and geom.get("type") == "Polygon"]
 
     with PostGis(db, geoms, merge) as result:
         # Remove any properties that PostGIS might have assigned.
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
 
-        # TODO: Parser breaks when properties and
-        # result.featcol['features'] arent't equal
-        # print(f"Properties: {len(properties)}\n
-        # Results: {len(result.featcol['features'])}")
-
         # Restore saved properties.
         if properties:
             feat_count = 0
             for feature in result.featcol["features"]:
-                feature["properties"] = properties[feat_count]
-                feat_count = feat_count + 1
+                # Guard: only assign if we have a corresponding saved
+                # property entry.
+                if feat_count < len(properties):
+                    feature["properties"] = properties[feat_count]
+                else:
+                    # If for some reason counts mismatch, set to
+                    # None rather than crashing.
+                    feature["properties"] = None
+                feat_count += 1
 
         return result.featcol

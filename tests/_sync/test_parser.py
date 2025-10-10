@@ -327,7 +327,7 @@ def test_featurecollection_multi_props(
     """Test a FeatureCollection containing MultiPolygon Feature with properties."""
     result = parse_aoi(db, featurecollection_multipolygon_properties)
 
-    assert result["features"]["properties"] == {"id": 1}
+    assert result["features"][0]["properties"] == {"id": 1}
 
 
 def test_invalid_input(db):
