@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.5 (2025-10-11)
+
+### Fix
+
+- cleanup code, fix test cases
+- add __all__ to package root for exports
+
+### Refactor
+
+- run pre-commit hooks on all code
+
 ## 0.3.4 (2025-09-01)
 
 - Fix Async parser using Sync postgis

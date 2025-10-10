@@ -1,6 +1,6 @@
 [project]
 name = "geojson-aoi-parser"
-version = "0.3.4"
+version = "0.3.5"
 description = "Parse and normalize a GeoJSON area of interest, using PostGIS."
 authors = [
     {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
@@ -70,7 +70,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.4"
+version = "0.3.5"
 version_provider = "uv"
 version_files = [
     "pyproject.toml:version",
