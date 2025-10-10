@@ -35,12 +35,12 @@ class DbConfig:
     Allows overriding values via constructor parameters, fallback to env vars.
 
 
-    Args:
-        dbname(str): Database name.
-        user(str): Database user.
-        password(str): Database password.
-        host(str): Database host.
-        port(str): Database port.
+    Attributes:
+        dbname (str): Database name.
+        user (str): Database user.
+        password (str): Database password.
+        host (str): Database host.
+        port (int): Database port.
     """
 
     dbname: Optional[str] = None
