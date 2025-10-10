@@ -34,9 +34,7 @@ class PostGis:
     Can reuse an existing upstream connection.
     """
 
-    def __init__(
-        self, db: str | Connection, geoms: list[GeoJSON], merge: bool = False
-    ):
+    def __init__(self, db: str | Connection, geoms: list[GeoJSON], merge: bool = False):
         """Initialise variables and compose classes."""
         self.table_id = uuid4().hex
         self.geoms = geoms

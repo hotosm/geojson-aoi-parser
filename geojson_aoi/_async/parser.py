@@ -195,12 +195,11 @@ async def parse_aoi_async(
 
     elif geojson_parsed.get("type") == "FeatureCollection":
         for feature in geojson_parsed.get("features"):
-
             # Append a copy of the properties list for each coordinate set
             # in the MultiPolygon. This ensures the split Polygons maintain
             # these properties.
             if feature["geometry"]["type"] == "MultiPolygon":
-                for coordinate in feature["geometry"]["coordinates"]:
+                for _coordinate in feature["geometry"]["coordinates"]:
                     properties.append(feature["properties"])
 
             elif feature["geometry"]["type"] in valid_geoms:
@@ -209,8 +208,8 @@ async def parse_aoi_async(
     # The same MultiPolygon handling as before. But applied to top-level MultiPolyons
     elif geojson_parsed.get("type") == "MultiPolygon":
         if feature["geometry"]["type"] == "MultiPolygon":
-                for coordinate in feature.get("coordinates"):
-                    properties.append(feature["properties"])
+            for _coordinate in feature.get("coordinates"):
+                properties.append(feature["properties"])
 
     # Extract from FeatureCollection
     geoms = strip_featcol(geojson_parsed)
@@ -223,8 +222,10 @@ async def parse_aoi_async(
         for feature in result.featcol["features"]:
             feature.pop("properties", None)
 
-        # TODO: Parser breaks when properties and result.featcol['features'] arent't equal
-        # print(f"Properties: {len(properties)}\n Results: {len(result.featcol['features'])}")
+        # TODO: Parser breaks when properties and
+        # result.featcol['features'] arent't equal
+        # print(f"Properties: {len(properties)}\n
+        # Results: {len(result.featcol['features'])}")
 
         # Restore saved properties.
         if properties:

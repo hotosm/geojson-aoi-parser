@@ -299,11 +299,12 @@ def featurecollection_mixed_geoms():
         ],
     }
 
+
 @pytest_asyncio.fixture
 def featurecollection_multipolygon_properties():
     """FeatureCollection containing a MultiPolygon with properties."""
     return {
-        "type" : "FeatureCollection",
+        "type": "FeatureCollection",
         "features": [
             {
                 "type": "Feature",
@@ -313,20 +314,20 @@ def featurecollection_multipolygon_properties():
                 "geometry": {
                     "type": "MultiPolygon",
                     "coordinates": [
-                    [[[40.0, 40.0], [20.0, 45.0], [45.0, 30.0], [40.0, 40.0]]],
-                    [
+                        [[[40.0, 40.0], [20.0, 45.0], [45.0, 30.0], [40.0, 40.0]]],
                         [
-                            [20.0, 35.0],
-                            [10.0, 30.0],
-                            [10.0, 10.0],
-                            [30.0, 5.0],
-                            [45.0, 20.0],
-                            [20.0, 35.0],
+                            [
+                                [20.0, 35.0],
+                                [10.0, 30.0],
+                                [10.0, 10.0],
+                                [30.0, 5.0],
+                                [45.0, 20.0],
+                                [20.0, 35.0],
+                            ],
+                            [[30.0, 20.0], [20.0, 15.0], [20.0, 25.0], [30.0, 20.0]],
                         ],
-                        [[30.0, 20.0], [20.0, 15.0], [20.0, 25.0], [30.0, 20.0]],
                     ],
-                ],
-                }
+                },
             }
-        ]
+        ],
     }

@@ -320,8 +320,11 @@ def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
     }
 
 
-def test_featurecollection_multi_props(db, featurecollection_multipolygon_properties):
-    """Test a FeatureCollection that contatins a MultiPolygon Feature with properties."""
+def test_featurecollection_multi_props(
+    db,
+    featurecollection_multipolygon_properties,
+):
+    """Test a FeatureCollection containing MultiPolygon Feature with properties."""
     result = parse_aoi(db, featurecollection_multipolygon_properties)
 
     assert result["features"]["properties"] == {"id": 1}

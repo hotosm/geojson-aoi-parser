@@ -320,8 +320,11 @@ async def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
     }
 
 
-async def test_featurecollection_multi_props(db, featurecollection_multipolygon_properties):
-    """Test a FeatureCollection that contatins a MultiPolygon Feature with properties."""
+async def test_featurecollection_multi_props(
+    db,
+    featurecollection_multipolygon_properties,
+):
+    """Test a FeatureCollection containing MultiPolygon Feature with properties."""
     result = await parse_aoi_async(db, featurecollection_multipolygon_properties)
 
     assert result["features"]["properties"] == {"id": 1}
@@ -380,7 +383,7 @@ async def test_no_warnings_valid_crs(db):
         ],
         "crs": {
             "type": "name",
-            "properties": {"name": "urn:ogc:async def:crs:OGC:1.3:CRS84"},
+            "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
         },
     }
 
