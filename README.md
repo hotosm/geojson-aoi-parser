@@ -80,9 +80,9 @@ Basic example:
 from geojson_aoi import parse_aoi
 
 polygon_geojson = {
-        "type": "Polygon",
-        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
-    }
+    "type": "Polygon",
+    "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+}
 
 # Where 'db' is some upstream database connection.
 feat_col = parse_aoi(db, polygon_geojson)
@@ -92,10 +92,10 @@ print(feat_col)
 #   'type': 'FeatureCollection',
 #   'features': [
 #       {
-#           'type': 'Feature', 
-#           'geometry': 
+#           'type': 'Feature',
+#           'geometry':
 #               {
-#                   'type': 'Polygon', 
+#                   'type': 'Polygon',
 #                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
 #                }
 #        }
@@ -109,9 +109,9 @@ Basic async example:
 from geojson_aoi import parse_aoi_async
 
 polygon_geojson = {
-        "type": "Polygon",
-        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
-    }
+    "type": "Polygon",
+    "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+}
 
 # Where 'db' is some upstream database connection.
 feat_col = parse_aoi_async(db, polygon_geojson)
@@ -121,10 +121,10 @@ print(feat_col)
 #   'type': 'FeatureCollection',
 #   'features': [
 #       {
-#           'type': 'Feature', 
-#           'geometry': 
+#           'type': 'Feature',
+#           'geometry':
 #               {
-#                   'type': 'Polygon', 
+#                   'type': 'Polygon',
 #                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
 #                }
 #        }
