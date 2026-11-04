@@ -26,9 +26,7 @@ services:
       target: ci
     container_name: aoi-parser
     volumes:
-      # Mount local package
-      - ./geojson_aoi:/opt/python/lib/python3.10/site-packages/geojson_aoi
-      # Mount local tests
+      - ./geojson_aoi:/opt/python/lib/python3.13/site-packages/geojson_aoi
       - ./tests:/data/tests
     depends_on:
       db:
@@ -48,7 +46,7 @@ services:
     command: "pytest"
 
   db:
-    image: "postgis/postgis:17-3.5-alpine"
+    image: "postgis/postgis:18-3.6-alpine"
     container_name: aoi-parser-db
     environment:
       - POSTGRES_USER=aoi

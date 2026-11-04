@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.0 (2026-11-04)
+
+### Feat
+
+- all normalisation is done in a single PostGIS query
+- `merge=True` merges polygons into a single polygon (#3)
+- non-Polygon geometries are skipped with a warning,
+  and an error is raised if no Polygons remain (#42)
+- KML input, including the Placemark `name` property (#45)
+- warn if any coordinates are outside WGS84 bounds
+
+### Fix
+
+- properties are kept with the correct Polygon
+- MultiPolygons inside GeometryCollections are no longer dropped
+- features always include `properties`, per RFC 7946
+- z coordinates no longer raise an invalid coordinates warning
+- a passed in connection is no longer committed
+- new connections are always closed, including on error
+
 ## 0.3.5 (2025-10-11)
 
 ### Fix

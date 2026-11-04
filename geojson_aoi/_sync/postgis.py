@@ -14,103 +14,31 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Wrapper around PostGIS geometry functions."""
+"""Run the normalise query in PostGIS."""
 
-import logging
-from uuid import uuid4
+from typing import Any
 
 from psycopg import Connection, sql
-from psycopg.types.json import Jsonb
 
-from geojson_aoi.normalize import Normalize
-from geojson_aoi.types import GeoJSON
-
-log = logging.getLogger(__name__)
+from geojson_aoi.normalize import NORMALIZE
+from geojson_aoi.types import FeatureCollection
 
 
-class PostGis:
-    """An synchronous database connection.
+def normalize(
+    db: str | Connection, source: sql.SQL, params: dict[str, Any]
+) -> tuple[int, bool, FeatureCollection]:
+    """Return the skipped geometry count, if within bounds, and FeatureCollection."""
+    if isinstance(db, str):
+        with Connection.connect(db) as connection:
+            return _execute(connection, source, params)
+    if isinstance(db, Connection):
+        return _execute(db, source, params)
+    raise ValueError("The `db` must be a connection string or psycopg connection.")
 
-    Can reuse an existing upstream connection.
-    """
 
-    def __init__(self, db: str | Connection, geoms: list[GeoJSON], merge: bool = False):
-        """Initialise variables and compose classes."""
-        self.table_id = uuid4().hex
-        self.geoms = geoms
-        self.db = db
-        self.featcol = None
-
-        self.normalize = Normalize()
-
-        # NOTE: Pontential future polygon merging feature.
-        # self.merge = merge
-
-    def __enter__(self) -> "PostGis":
-        """Initialise the database via context manager."""
-        self.create_connection()
-
-        with self.connection.cursor() as cur:
-            cur.execute(self.normalize.init_table(self.table_id))
-
-            for geom in self.geoms:
-                st_functions = self.normalize.get_transformation_funcs(geom)
-
-                _sql = sql.SQL("""
-                        INSERT INTO {} (geometry)
-                        VALUES ({});
-                    """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-
-                data = (Jsonb(geom),)
-
-                cur.execute(_sql, data)
-
-            # NOTE: Potential future polygon merging feature.
-            # if self.merge:
-            #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
-
-            cur.execute(self.normalize.query_as_feature_collection(self.table_id))
-            self.featcol = (cur.fetchall())[0][0]
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Execute the SQL and optionally close the db connection."""
-        self.close_connection()
-
-    def create_connection(self) -> None:
-        """Get a new database connection."""
-        # Create new connection
-        if isinstance(self.db, str):
-            self.connection = Connection.connect(self.db)
-            self.is_new_connection = True
-
-        # Reuse existing connection
-        elif isinstance(self.db, Connection):
-            self.connection = self.db
-            self.is_new_connection = False
-
-        # Else, error
-        else:
-            msg = (
-                "The `db` variable is not a valid string or "
-                "existing psycopg connection."
-            )
-            log.error(msg)
-            raise ValueError(msg)
-
-    def close_connection(self) -> None:
-        """Close the database connection."""
-        if not self.connection:
-            return
-
-        # Execute all commands in a transaction before closing
-        try:
-            self.connection.commit()
-        except Exception as e:
-            log.error(e)
-            log.error("Error committing psycopg transaction to db")
-        finally:
-            # Only close the connection if it was newly created
-            if self.is_new_connection:
-                self.connection.close()
+def _execute(
+    connection: Connection, source: sql.SQL, params: dict[str, Any]
+) -> tuple[int, bool, FeatureCollection]:
+    with connection.cursor() as cur:
+        cur.execute(NORMALIZE.format(source=source), params)
+        return cur.fetchone()

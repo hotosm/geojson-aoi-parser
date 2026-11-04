@@ -29,21 +29,18 @@ def test_polygon_with_holes(db, polygon_holes_geojson):
     result = parse_aoi(db, polygon_holes_geojson)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
-    # We have three rings inside polygon (1 exterior, 2 interior)
+    # 1 exterior, 2 interior
     assert len(result["features"][0]["geometry"]["coordinates"]) == 3
 
 
-@pytest.mark.skip(reason="Test case for future feature.")
 def test_polygon_merge_with_holes(db, polygon_holes_geojson):
     """A single Polygon with holes, where the holes should be removed."""
     result = parse_aoi(db, polygon_holes_geojson, merge=True)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
-    # As we specify 'merge', only the exterior ring should be remaining
     assert len(result["features"][0]["geometry"]["coordinates"]) == 1
 
 
-@pytest.mark.skip(reason="Test case for future feature.")
 def test_polygon_with_overlaps_merged(db, polygon_overlaps_geojson):
     """Merge overlapping polygons within multipolygon."""
     result = parse_aoi(db, polygon_overlaps_geojson, merge=True)
@@ -61,7 +58,9 @@ def test_z_dimension_polygon(db, polygon_geojson):
     assert len(result["features"]) == 1
     assert result == {
         "type": "FeatureCollection",
-        "features": [{"type": "Feature", "geometry": polygon_geojson}],
+        "features": [
+            {"type": "Feature", "geometry": polygon_geojson, "properties": {}}
+        ],
     }
 
 
@@ -132,20 +131,18 @@ def test_multiple_nested_geometrycollection(db, geomcol_geojson):
     assert len(result["features"]) == 2
 
 
-# NOTE we do not support this, see the README
-# def test_geometrycollection_multiple_geoms(polygon_geojson):
-#     """A GeometryCollection with multiple geometries."""
-#     geojson_data = {
-#         "type": "GeometryCollection",
-#         "geometries": [polygon_geojson, polygon_geojson, polygon_geojson],
-#     }
+def test_geometrycollection_multiple_geoms(db, polygon_geojson):
+    """A GeometryCollection with multiple geometries."""
+    geojson_data = {
+        "type": "GeometryCollection",
+        "geometries": [polygon_geojson, polygon_geojson, polygon_geojson],
+    }
 
-#     result = parse_aoi(db, geojson_data)
-#     assert is_featcol_nested_polygon(result)
-#     assert len(result["features"]) == 3
+    result = parse_aoi(db, geojson_data)
+    assert is_featcol_nested_polygon(result)
+    assert len(result["features"]) == 3
 
 
-@pytest.mark.skip(reason="We are not doing the merge feature for now.")
 def test_featcol_merge_multiple_polygons(db):
     """Merge multiple polygons inside a FeatureCollection."""
     geojson_data = {
@@ -202,17 +199,11 @@ def test_featcol_no_merge_polygons(db):
     assert len(result["features"]) == 2
 
 
-@pytest.mark.skip(reason="We are not doing the merge feature for now.")
 def test_merge_multipolygon(db, multipolygon_geojson):
     """Merge multiple polygons inside a MultiPolygon."""
     result = parse_aoi(db, multipolygon_geojson, merge=True)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
-
-    # print(json.dumps(multipolygon_geojson))
-    # print("")
-    # print(json.dumps(result))
-    # assert False
 
 
 def test_multipolygon_no_merge(db, multipolygon_geojson):
@@ -224,20 +215,18 @@ def test_multipolygon_no_merge(db, multipolygon_geojson):
 
 def test_multipolygon_with_holes(db, multipolygon_holes_geojson):
     """MultiPolygon --> Polygon, with holes remaining."""
-    # FIXME this should not removed the holes from the polygon geom
-    # FIXME Instead the polygon should simply be extrated from the MultiPolygon
-    # FIXME (we only remove holes if merge=True)
     result = parse_aoi(db, multipolygon_holes_geojson)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
+    assert len(result["features"][0]["geometry"]["coordinates"]) == 3
 
 
-@pytest.mark.skip(reason="We are not doing the merge feature for now.")
 def test_multipolygon_with_holes_merged(db, multipolygon_holes_geojson):
     """Merge multipolygon, including holes."""
     result = parse_aoi(db, multipolygon_holes_geojson, merge=True)
     assert is_featcol_nested_polygon(result)
     assert len(result["features"]) == 1
+    assert len(result["features"][0]["geometry"]["coordinates"]) == 1
 
 
 def test_feature_with_property(db, feature_with_property_geojson):
@@ -245,7 +234,6 @@ def test_feature_with_property(db, feature_with_property_geojson):
     result = parse_aoi(db, feature_with_property_geojson)
 
     for feature in result["features"]:
-        print(feature)
         assert feature["properties"] == feature_with_property_geojson["properties"]
 
 
@@ -274,28 +262,19 @@ def test_featcol_different_properties(
 
 
 def test_geometrycollection_mixed_geoms(db, geometrycollection_mixed_geoms):
-    """Test a GeometryCollection that contains all kinds of geoms."""
-    result = parse_aoi(db, geometrycollection_mixed_geoms)
+    """Polygons are extracted from a GeometryCollection, non-Polygons skipped."""
+    with pytest.warns(UserWarning, match="Skipped 8 non-Polygon"):
+        result = parse_aoi(db, geometrycollection_mixed_geoms)
 
-    assert result == {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [[40.0, 40.0], [45.0, 30.0], [20.0, 45.0], [40.0, 40.0]]
-                    ],
-                },
-            }
-        ],
-    }
+    assert is_featcol_nested_polygon(result)
+    # One Polygon, plus two from the MultiPolygon
+    assert len(result["features"]) == 3
 
 
 def test_featurecollection_mixed_geoms(db, featurecollection_mixed_geoms):
-    """Test a FeatureCollection that contains all kinds of geoms."""
-    result = parse_aoi(db, featurecollection_mixed_geoms)
+    """Non-Polygon Features are skipped, keeping the remaining properties."""
+    with pytest.warns(UserWarning, match="Skipped 2 non-Polygon"):
+        result = parse_aoi(db, featurecollection_mixed_geoms)
 
     assert result == {
         "type": "FeatureCollection",
@@ -331,7 +310,7 @@ def test_featurecollection_multi_props(
 
 
 def test_invalid_input(db):
-    """Invalud input for parse_aoi function."""
+    """Invalid input for parse_aoi function."""
     with pytest.raises(
         ValueError, match="GeoJSON input must be a valid dict, str, or bytes"
     ):
@@ -342,6 +321,19 @@ def test_invalid_input(db):
 
     with pytest.raises(ValueError, match="The GeoJSON type must be one of:"):
         parse_aoi(db, {"type": "Point"})
+
+    line_featcol = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {"type": "LineString", "coordinates": [[0, 0], [1, 1]]},
+                "properties": {},
+            }
+        ],
+    }
+    with pytest.warns(UserWarning), pytest.raises(ValueError, match="No Polygon"):
+        parse_aoi(db, line_featcol)
 
 
 def test_file_input(db, tmp_path):
@@ -414,7 +406,19 @@ def test_warnings_raised_invalid_crs(db):
         ],
         "crs": {"type": "name", "properties": {"name": "invalid!!"}},
     }
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="Unsupported coordinate system"):
+        parse_aoi(db, geojson_data)
+
+
+def test_no_warnings_z_coords(db):
+    """A z-dimension is valid, so should not raise warnings."""
+    geojson_data = {
+        "type": "Polygon",
+        "coordinates": [[[0, 0, 5], [1, 0, 5], [1, 1, 5], [0, 1, 5], [0, 0, 5]]],
+        "crs": {"type": "name", "properties": {"name": "WGS 84"}},
+    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         parse_aoi(db, geojson_data)
 
 
@@ -437,5 +441,94 @@ def test_warnings_raised_invalid_coords(db):
             "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
         },
     }
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="outside WGS84"):
         parse_aoi(db, geojson_data)
+
+
+def test_kml_input(db):
+    """Polygons are extracted from KML Placemarks, keeping the name."""
+    kml = """<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://www.opengis.net/kml/2.2">
+      <Document>
+        <Placemark>
+          <name>Area A</name>
+          <Polygon><outerBoundaryIs><LinearRing>
+            <coordinates>0,0,10 1,0,10 1,1,10 0,1,10 0,0,10</coordinates>
+          </LinearRing></outerBoundaryIs></Polygon>
+        </Placemark>
+        <Placemark>
+          <Point><coordinates>5,5</coordinates></Point>
+        </Placemark>
+      </Document>
+    </kml>"""
+
+    with pytest.warns(UserWarning, match="Skipped 1 non-Polygon"):
+        result = parse_aoi(db, kml.encode())
+    assert is_featcol_nested_polygon(result)
+    assert len(result["features"]) == 1
+    assert result["features"][0]["properties"] == {"name": "Area A"}
+    # z-dimension is stripped
+    assert result["features"][0]["geometry"]["coordinates"][0][0] == [0, 0]
+
+
+def test_kml_name_is_unescaped(db):
+    """XML entities and CDATA in a Placemark name are decoded."""
+    kml = """<kml xmlns="http://www.opengis.net/kml/2.2">
+      <Placemark>
+        <name>A &amp; B</name>
+        <Polygon><outerBoundaryIs><LinearRing>
+          <coordinates>0,0 1,0 1,1 0,1 0,0</coordinates>
+        </LinearRing></outerBoundaryIs></Polygon>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[C & D]]></name>
+        <Polygon><outerBoundaryIs><LinearRing>
+          <coordinates>2,0 3,0 3,1 2,1 2,0</coordinates>
+        </LinearRing></outerBoundaryIs></Polygon>
+      </Placemark>
+    </kml>"""
+
+    result = parse_aoi(db, kml)
+    names = [feature["properties"]["name"] for feature in result["features"]]
+    assert names == ["A & B", "C & D"]
+
+
+def test_kml_warns_on_skipped_geometries(db):
+    """Non-Polygon KML geometries are counted, including mixed dimensions."""
+    kml = """<kml xmlns="http://www.opengis.net/kml/2.2">
+      <Placemark>
+        <MultiGeometry>
+          <Polygon><outerBoundaryIs><LinearRing>
+            <coordinates>0,0,10 1,0,10 1,1,10 0,1,10 0,0,10</coordinates>
+          </LinearRing></outerBoundaryIs></Polygon>
+          <Point><coordinates>5,5</coordinates></Point>
+        </MultiGeometry>
+      </Placemark>
+      <Placemark>
+        <LineString><coordinates>0,0 1,1</coordinates></LineString>
+      </Placemark>
+    </kml>"""
+
+    with pytest.warns(UserWarning, match="Skipped 2 non-Polygon"):
+        result = parse_aoi(db, kml)
+    assert len(result["features"]) == 1
+
+
+def test_nested_crs_merge(db, polygon_geojson):
+    """A CRS on a nested geometry does not produce mixed SRIDs."""
+    nested_crs = {"type": "name", "properties": {"name": "EPSG:3857"}}
+    geojson = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "geometry": polygon_geojson, "properties": {}},
+            {
+                "type": "Feature",
+                "geometry": {**polygon_geojson, "crs": nested_crs},
+                "properties": {},
+            },
+        ],
+    }
+
+    result = parse_aoi(db, geojson, merge=True)
+    assert len(result["features"]) == 1
+    assert "crs" not in result["features"][0]["geometry"]

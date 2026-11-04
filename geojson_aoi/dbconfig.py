@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright (c) Humanitarian OpenStreetMap Team
 # This file is part of geojson-aoi-parser.
 #
@@ -15,7 +14,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-# The code is this file was originally developed by
+# The code in this file was originally developed by
 # Emir Fabio Cognigni (https://github.com/emirfabio),
 # Sam Woodcock (https://github.com/spwoodcock), and
 # Stephen Garland (https://github.com/stephanGarland)
@@ -25,7 +24,6 @@
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -33,7 +31,6 @@ class DbConfig:
     """Database config for Postgres.
 
     Allows overriding values via constructor parameters, fallback to env vars.
-
 
     Attributes:
         dbname (str): Database name.
@@ -43,21 +40,20 @@ class DbConfig:
         port (int): Database port.
     """
 
-    dbname: Optional[str] = None
-    user: Optional[str] = None
-    password: Optional[str] = None
-    host: Optional[str] = None
-    port: Optional[int] = None
+    dbname: str | None = None
+    user: str | None = None
+    password: str | None = None
+    host: str | None = None
+    port: int | None = None
 
     def __post_init__(self):
-        """Ensures env variables are read at runtime, not at class definition."""
+        """Read env vars at runtime, not at class definition."""
         self.dbname = self.dbname or os.getenv("GEOJSON_AOI_DB_NAME")
         self.user = self.user or os.getenv("GEOJSON_AOI_DB_USER")
         self.password = self.password or os.getenv("GEOJSON_AOI_DB_PASSWORD")
         self.host = self.host or os.getenv("GEOJSON_AOI_DB_HOST", "db")
         self.port = self.port or int(os.getenv("GEOJSON_AOI_DB_PORT", "5432"))
 
-        # Raise error if any required field is missing
         missing_fields = [
             field
             for field in ["dbname", "user", "password"]

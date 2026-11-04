@@ -14,102 +14,113 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Support methods to nomalize GeoJSON inputs."""
+"""PostGIS queries to normalise an AOI into a FeatureCollection of Polygons.
 
-from geojson_aoi.types import GeoJSON
+A source query reads the input into (idx, geom, props) rows for NORMALIZE.
+"""
 
+from psycopg import sql
 
-class Normalize:
-    """Normalise the geometry.
+# A geometry level crs is dropped, as it would give each row a different SRID.
+GEOJSON_SOURCE = sql.SQL("""
+    SELECT
+        f.idx,
+        ST_GeomFromGeoJSON((f.feature -> 'geometry') - 'crs') AS geom,
+        f.feature -> 'properties' AS props
+    FROM (SELECT %(data)s::jsonb AS data) AS input,
+    LATERAL jsonb_array_elements(
+        CASE input.data ->> 'type'
+            WHEN 'FeatureCollection' THEN input.data -> 'features'
+            WHEN 'Feature' THEN jsonb_build_array(input.data)
+            ELSE jsonb_build_array(jsonb_build_object('geometry', input.data))
+        END
+    ) WITH ORDINALITY AS f(feature, idx)
+    WHERE jsonb_typeof(f.feature -> 'geometry') = 'object'
+""")
 
-    - Strip z-dimension (force 2D).
-    - Remove geoms from GeometryCollection.
-    - Multi geometries to single geometries.
-    """
+# local-name() ignores the KML namespace version.
+# Non-Polygons are read so that NORMALIZE can count them as skipped.
+# ST_Force2D is needed as ST_Collect rejects mixed dimensions.
+# XMLTABLE decodes entities and CDATA, unlike casting xpath() results to text.
+KML_SOURCE = sql.SQL("""
+    SELECT
+        pm.idx,
+        (
+            SELECT ST_Collect(ST_Force2D(ST_GeomFromKML(node::text)))
+            FROM unnest(xpath(
+                '//*[local-name()="Polygon"
+                    or local-name()="LineString"
+                    or local-name()="Point"]',
+                pm.node
+            )) AS node
+        ) AS geom,
+        jsonb_strip_nulls(jsonb_build_object(
+            'name', (
+                SELECT t.name
+                FROM XMLTABLE(
+                    '/*/*[local-name()="name"]' PASSING pm.node
+                    COLUMNS name text PATH '.'
+                ) AS t
+                LIMIT 1
+            )
+        )) AS props
+    FROM unnest(
+        xpath('//*[local-name()="Placemark"]', %(data)s::xml)
+    ) WITH ORDINALITY AS pm(node, idx)
+""")
 
-    @staticmethod
-    def init_table(table_id: str) -> str:
-        """Create the table for geometry processing."""
-        return f"""
-            CREATE TEMP TABLE "{table_id}" (
-                id SERIAL PRIMARY KEY,
-                geometry GEOMETRY(Polygon, 4326)
-            );
-        """
-
-    @staticmethod
-    def get_transformation_funcs(geom: GeoJSON) -> str:
-        """Construct and return string of functions that correspond with given geom."""
-        # ST_Force2D strings z-coordinates
-        val = "ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON(%s), 4326))"
-        # ST_CollectionExtract converts any GeometryCollections
-        # into MultiXXX geoms
-        if geom.get("type") == "GeometryCollection":
-            val = f"ST_CollectionExtract({val})"
-
-        # ST_Dump extracts all MultiXXX geoms to single geom equivalents
-        # TODO ST_Dump (complex, as it returns multiple geometries!)
-
-        # ST_ForcePolygonCW forces clockwise orientation for
-        # their exterior ring
-        if geom.get("type") == "Polygon" or geom.get("type") == "MultiPolygon":
-            val = f"ST_ForcePolygonCW({val})"
-
-        return val
-
-    @staticmethod
-    def query_as_feature_collection(table_id: str) -> str:
-        """Query all geometries as FeatureCollection."""
-        val = f"""SELECT json_build_object(
-                    'type', 'FeatureCollection',
-                    'features', json_agg(ST_AsGeoJSON(t.*)::json)
+# A union of disjoint polygons stays multi-part, so use the convex hull.
+NORMALIZE = sql.SQL("""
+    WITH source AS ({source}),
+    dumped AS (
+        SELECT idx, (d).path AS path, (d).geom AS geom, props
+        FROM (SELECT idx, ST_Dump(geom) AS d, props FROM source) AS s
+    ),
+    polygons AS (
+        SELECT idx, path, ST_Force2D(geom) AS geom, props
+        FROM dumped
+        WHERE ST_GeometryType(geom) = 'ST_Polygon'
+    ),
+    merged AS (
+        SELECT ST_UnaryUnion(ST_Collect(geom)) AS geom FROM polygons
+    ),
+    output AS (
+        SELECT idx, path, geom, props FROM polygons WHERE NOT %(merge)s
+        UNION ALL
+        SELECT
+            1,
+            '{{}}'::int[],
+            CASE
+                WHEN ST_NumGeometries(geom) = 1
+                THEN ST_MakePolygon(ST_ExteriorRing(ST_GeometryN(geom, 1)))
+                ELSE ST_ConvexHull(geom)
+            END,
+            NULL
+        FROM merged
+        WHERE %(merge)s AND geom IS NOT NULL
+    )
+    SELECT
+        (SELECT count(*) FROM dumped) - (SELECT count(*) FROM polygons),
+        (
+            SELECT bool_and(
+                ST_XMin(geom) >= -180 AND ST_XMax(geom) <= 180
+                AND ST_YMin(geom) >= -90 AND ST_YMax(geom) <= 90
+            )
+            FROM polygons
+        ),
+        jsonb_build_object(
+            'type', 'FeatureCollection',
+            'features', COALESCE(
+                jsonb_agg(
+                    jsonb_build_object(
+                        'type', 'Feature',
+                        'geometry', ST_AsGeoJSON(ST_ForcePolygonCW(geom))::jsonb,
+                        'properties', COALESCE(props, '{{}}'::jsonb)
                     )
-                FROM "{table_id}" as t(id, geom);"""
-
-        return val
-
-    # TODO: Consider merging interior rings as future feature should the need appear.
-    # Will have a an extra flag to do this.
-    # TODO: Also do not use this in a function.
-    # @staticmethod
-    # def merge_disjoints(geoms: list[GeoJSON], table_id: str) -> str:
-    #    """Check whether a Polygon contains holes.
-    #    If it does, do a ST_ConvexHull on the geom.
-    #    """
-    #    val = f"""
-    #        CREATE OR REPLACE FUNCTION merge_disjoints() RETURNS SETOF "{table_id}" AS
-    #        $BODY$
-    #        DECLARE
-    #            i "{table_id}"%rowtype;
-    #        BEGIN
-    #            FOR i IN
-    #                SELECT * FROM "{table_id}"
-    #            LOOP
-    #                -- Using ST_NRings with ST_NumGeometries rather than ST_Disjoint
-    #                -- This method seems to work for our use case for simply
-    #                UPDATE "{table_id}"
-    #                SET geometry = ST_ConvexHull(i.geometry)
-    #                WHERE ST_NRings(i.geometry) - ST_NumGeometries(i.geometry) > 0;
-    #
-    #                RETURN NEXT i;
-    #            END LOOP;
-    #            RETURN;
-    #        END;
-    #        $BODY$
-    #        LANGUAGE plpgsql;
-    #
-    #        SELECT * FROM merge_disjoints();
-    #    """
-    #
-    #    return val
-    #
-    ## TODO: Consider merging overlaps are a future feature.
-    # @staticmethod
-    # def merge_overlaps(geoms: list[GeoJSON], table_id: str) -> str:
-    #    """Check whether each MultiGeometry contains overlapping Polygons.
-    #    Preform an ST_UnaryUnion if they overlap.
-    #    """
-    #    val = f"""
-    #
-    #    """
-    #    return val
+                    ORDER BY idx, path
+                ),
+                '[]'::jsonb
+            )
+        )
+    FROM output
+""")

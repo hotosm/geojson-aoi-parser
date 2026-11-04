@@ -35,3 +35,9 @@ build:
 test:
   just build
   docker compose run --rm parser pytest
+
+# Build and publish to PyPI, requires PYPI_TOKEN
+publish:
+  docker run --rm -v "$PWD":/app:ro -w /app -e UV_PUBLISH_TOKEN="$PYPI_TOKEN" \
+    ghcr.io/astral-sh/uv:0.9.5-python3.13-bookworm-slim \
+    sh -c 'uv build -o /tmp/dist && uv publish /tmp/dist/*'

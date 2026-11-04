@@ -5,7 +5,7 @@
   <img src="https://raw.githubusercontent.com/hotosm/geojson-aoi-parser/refs/heads/main/docs/images/hot_logo.png" style="width: 200px;" alt="HOT"></a>
 </p>
 <p align="center">
-  <em>Parse and normalize a GeoJSON area of interest, using using PostGIS.</em>
+  <em>Parse and normalize a GeoJSON area of interest, using PostGIS.</em>
 </p>
 <p align="center">
   <a href="https://github.com/hotosm/geojson-aoi-parser/actions/workflows/docs.yml" target="_blank">
@@ -50,23 +50,40 @@
 
 ## Priorities
 
-- **Flexible data input**: file bytes, dict, string JSON.
+- **Flexible data input**: file path, file bytes, dict, string.
 - **Flexible geometry input**:
   - Polygon
   - MultiPolygons
   - GeometryCollection
   - Feature
   - FeatureCollection
+  - KML (Polygons from each Placemark, keeping the `name` property)
 - Splits multipolygons into featcol of individual polygons.
 - Handle geometries nested inside GeometryCollection.
 - Remove any z-dimension coordinates.
+- Skip non-Polygon geometries, with a warning.
 - Warn user if CRS is provided, in a coordinate system other than EPSG:4326.
+- Optionally merge all polygons into a single polygon (`merge=True`).
 - **Normalised output**: FeatureCollection containing Polygon geoms.
+
+All processing happens in PostGIS, so the only dependency is `psycopg`.
+
+## Merging Polygons
+
+`parse_aoi(db, raw_geojson, merge=True)` returns a single Polygon:
+
+- Overlapping or touching polygons are unioned, and holes are removed.
+- Disjoint polygons are joined by their convex hull.
+
+## Other File Formats
+
+Shapefile, GeoPackage, etc are not supported, as reading them requires GDAL.
+Convert them first, e.g. `ogr2ogr -f GeoJSON aoi.geojson aoi.gpkg`.
 
 ## Capturing The Warnings
 
-If the GeoJSON has an invalid CRS, or coordinates seem off, a warning
-will be raised.
+If the GeoJSON has an invalid CRS, coordinates seem off, or non-Polygon
+geometries are skipped, a warning will be raised.
 
 To install:
 
@@ -80,9 +97,9 @@ Basic example:
 from geojson_aoi import parse_aoi
 
 polygon_geojson = {
-        "type": "Polygon",
-        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
-    }
+    "type": "Polygon",
+    "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+}
 
 # Where 'db' is some upstream database connection.
 feat_col = parse_aoi(db, polygon_geojson)
@@ -92,12 +109,13 @@ print(feat_col)
 #   'type': 'FeatureCollection',
 #   'features': [
 #       {
-#           'type': 'Feature', 
-#           'geometry': 
+#           'type': 'Feature',
+#           'geometry':
 #               {
-#                   'type': 'Polygon', 
+#                   'type': 'Polygon',
 #                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
-#                }
+#                },
+#           'properties': {}
 #        }
 #     ]
 # }
@@ -109,24 +127,25 @@ Basic async example:
 from geojson_aoi import parse_aoi_async
 
 polygon_geojson = {
-        "type": "Polygon",
-        "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
-    }
+    "type": "Polygon",
+    "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+}
 
 # Where 'db' is some upstream database connection.
-feat_col = parse_aoi_async(db, polygon_geojson)
+feat_col = await parse_aoi_async(db, polygon_geojson)
 
 print(feat_col)
 # {
 #   'type': 'FeatureCollection',
 #   'features': [
 #       {
-#           'type': 'Feature', 
-#           'geometry': 
+#           'type': 'Feature',
+#           'geometry':
 #               {
-#                   'type': 'Polygon', 
+#                   'type': 'Polygon',
 #                   'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]
-#                }
+#                },
+#           'properties': {}
 #        }
 #     ]
 # }
@@ -154,7 +173,7 @@ with warnings.catch_warnings(record=True) as recorded_warnings:
 
 if recorded_warnings:
     for warning in recorded_warnings:
-        if isinstance(warning.message, UserWarning)
+        if isinstance(warning.message, UserWarning):
             # do stuff with warning
             logger.warning(f"A warning was encountered: {warning.message}")
 ```
@@ -176,7 +195,7 @@ db = DbConfig(
     port="5432",
 )
 
-featcol = parse_aoi(db, raw_geojson)
+featcol = parse_aoi(db.get_connection_string(), raw_geojson)
 ```
 
 - Or alternatively as variables from your system environment:
@@ -192,9 +211,9 @@ GEOJSON_AOI_DB_PORT=5432
 then
 
 ```python
-from geojson_aoi import parse_aoi
+from geojson_aoi import parse_aoi, DbConfig
 
-featcol = parse_aoi(db, raw_geojson)
+featcol = parse_aoi(DbConfig().get_connection_string(), raw_geojson)
 ```
 
 ((All credit for DbConfig goes to <https://github.com/hotosm/pg-nearest-city/>))

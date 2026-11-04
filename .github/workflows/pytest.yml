@@ -3,15 +3,13 @@ name: 🧪 PyTest
 on:
   push:
     branches: [main]
-  # Run tests on PR, prior to merge to main & development
   pull_request:
     branches: [main]
-  # Allow manual trigger (workflow_dispatch)
   workflow_dispatch:
 
 jobs:
   pytest:
-    uses: hotosm/gh-workflows/.github/workflows/just.yml@3.3.2
+    uses: hotosm/gh-workflows/.github/workflows/just.yml@4.1.0
     with:
       environment: "test"
       command: "test"

@@ -46,10 +46,10 @@ SUBS = [
     ("asynchronous", "synchronous"),
     ("_async", "_sync"),
     # Package specific
-    ("AsyncPostGis", "PostGis"),
     ("AsyncConnection", "Connection"),
     ("AsyncCursor", "Cursor"),
     ("parse_aoi_async", "parse_aoi"),
+    ("normalize_async", "normalize"),
     # Testing
     ("pytest_asyncio.fixture", "pytest.fixture"),
     ("import pytest_asyncio", ""),

@@ -5,7 +5,6 @@ import pytest_asyncio
 from geojson_aoi.dbconfig import DbConfig
 
 
-# TODO: Unable to get dummy session to work in pytest, or luke session to work in docker
 @pytest_asyncio.fixture()
 def db():
     """Database URI."""
@@ -109,9 +108,9 @@ def multipolygon_holes_geojson():
 
 @pytest_asyncio.fixture
 def polygon_overlaps_geojson():
-    """Polygon with overlapping polygons."""
+    """MultiPolygon with overlapping polygons."""
     return {
-        "type": "Polygon",
+        "type": "MultiPolygon",
         "coordinates": [
             [
                 [

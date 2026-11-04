@@ -1,26 +1,34 @@
 [project]
 name = "geojson-aoi-parser"
-version = "0.3.5"
+version = "1.0.0"
 description = "Parse and normalize a GeoJSON area of interest, using PostGIS."
 authors = [
     {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
     {name = "Luke Everhart", email = "luke.f.everhart@gmail.com"},
 ]
 readme = "README.md"
-license = {text = "GPL-3.0-only"}
+license = "GPL-3.0-or-later"
 requires-python = ">=3.10"
 keywords = ["geojson", "aoi", "parser", "normalize", "hotosm"]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
     "Topic :: Utilities",
     "Topic :: Scientific/Engineering :: GIS",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "psycopg>=3.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/hotosm/geojson-aoi-parser"
+Documentation = "https://hotosm.github.io/geojson-aoi-parser"
+Changelog = "https://github.com/hotosm/geojson-aoi-parser/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 test = [
@@ -36,7 +44,7 @@ docs = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -70,7 +78,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.5"
+version = "1.0.0"
 version_provider = "uv"
 version_files = [
     "pyproject.toml:version",

@@ -3,11 +3,12 @@ name: 🚩 Publish to PyPi.org
 on:
   release:
     types: [published]
-  # Allow manual trigger (workflow_dispatch)
   workflow_dispatch:
 
 jobs:
   publish_to_pypi:
-    uses: hotosm/gh-workflows/.github/workflows/pypi_publish.yml@3.3.2
-    secrets:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+    uses: hotosm/gh-workflows/.github/workflows/just.yml@4.1.0
+    with:
+      environment: "test"
+      command: "publish"
+    secrets: inherit

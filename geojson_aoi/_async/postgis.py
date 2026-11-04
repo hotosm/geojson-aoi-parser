@@ -14,105 +14,31 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-"""Wrapper around PostGIS geometry functions."""
+"""Run the normalise query in PostGIS."""
 
-import logging
-from uuid import uuid4
+from typing import Any
 
 from psycopg import AsyncConnection, sql
-from psycopg.types.json import Jsonb
 
-from geojson_aoi.normalize import Normalize
-from geojson_aoi.types import GeoJSON
-
-log = logging.getLogger(__name__)
+from geojson_aoi.normalize import NORMALIZE
+from geojson_aoi.types import FeatureCollection
 
 
-class AsyncPostGis:
-    """An asynchronous database connection.
+async def normalize_async(
+    db: str | AsyncConnection, source: sql.SQL, params: dict[str, Any]
+) -> tuple[int, bool, FeatureCollection]:
+    """Return the skipped geometry count, if within bounds, and FeatureCollection."""
+    if isinstance(db, str):
+        async with await AsyncConnection.connect(db) as connection:
+            return await _execute(connection, source, params)
+    if isinstance(db, AsyncConnection):
+        return await _execute(db, source, params)
+    raise ValueError("The `db` must be a connection string or psycopg connection.")
 
-    Can reuse an existing upstream connection.
-    """
 
-    def __init__(
-        self, db: str | AsyncConnection, geoms: list[GeoJSON], merge: bool = False
-    ):
-        """Initialise variables and compose classes."""
-        self.table_id = uuid4().hex
-        self.geoms = geoms
-        self.db = db
-        self.featcol = None
-
-        self.normalize = Normalize()
-
-        # NOTE: Pontential future polygon merging feature.
-        # self.merge = merge
-
-    async def __aenter__(self) -> "AsyncPostGis":
-        """Initialise the database via context manager."""
-        await self.create_connection()
-
-        async with self.connection.cursor() as cur:
-            await cur.execute(self.normalize.init_table(self.table_id))
-
-            for geom in self.geoms:
-                st_functions = self.normalize.get_transformation_funcs(geom)
-
-                _sql = sql.SQL("""
-                        INSERT INTO {} (geometry)
-                        VALUES ({});
-                    """).format(sql.Identifier(self.table_id), sql.SQL(st_functions))
-
-                data = (Jsonb(geom),)
-
-                await cur.execute(_sql, data)
-
-            # NOTE: Potential future polygon merging feature.
-            # if self.merge:
-            #    cur.execute(self.normalize.merge_disjoints(self.geoms, self.table_id))
-
-            await cur.execute(self.normalize.query_as_feature_collection(self.table_id))
-            self.featcol = (await cur.fetchall())[0][0]
-
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Execute the SQL and optionally close the db connection."""
-        await self.close_connection()
-
-    async def create_connection(self) -> None:
-        """Get a new database connection."""
-        # Create new connection
-        if isinstance(self.db, str):
-            self.connection = await AsyncConnection.connect(self.db)
-            self.is_new_connection = True
-
-        # Reuse existing connection
-        elif isinstance(self.db, AsyncConnection):
-            self.connection = self.db
-            self.is_new_connection = False
-
-        # Else, error
-        else:
-            msg = (
-                "The `db` variable is not a valid string or "
-                "existing psycopg connection."
-            )
-            log.error(msg)
-            raise ValueError(msg)
-
-    async def close_connection(self) -> None:
-        """Close the database connection."""
-        if not self.connection:
-            return
-
-        # Execute all commands in a transaction before closing
-        try:
-            await self.connection.commit()
-        except Exception as e:
-            log.error(e)
-            log.error("Error committing psycopg transaction to db")
-        finally:
-            # Only close the connection if it was newly created
-            if self.is_new_connection:
-                await self.connection.close()
+async def _execute(
+    connection: AsyncConnection, source: sql.SQL, params: dict[str, Any]
+) -> tuple[int, bool, FeatureCollection]:
+    async with connection.cursor() as cur:
+        await cur.execute(NORMALIZE.format(source=source), params)
+        return await cur.fetchone()

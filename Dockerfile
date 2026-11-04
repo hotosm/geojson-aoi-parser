@@ -14,8 +14,8 @@
 #     You should have received a copy of the GNU General Public License
 #     along with geojson-aoi-parser.  If not, see <https:#www.gnu.org/licenses/>.
 #
-ARG PYTHON_IMG_TAG=3.10
-ARG UV_IMG_TAG=0.5.2
+ARG PYTHON_IMG_TAG=3.13
+ARG UV_IMG_TAG=0.9.5
 FROM ghcr.io/astral-sh/uv:${UV_IMG_TAG} AS uv
 
 
@@ -63,7 +63,7 @@ RUN uv build
 
 
 
-# Build stage will all dependencies required to build Python wheels
+# Build stage with all dependencies required to build Python wheels
 FROM base AS build
 RUN apt-get update --quiet \
     && DEBIAN_FRONTEND=noninteractive \
@@ -74,7 +74,6 @@ RUN apt-get update --quiet \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=uv /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock README.md /_lock/
-# Ensure caching
 RUN --mount=type=cache,target=/root/.cache <<EOT
     uv sync \
         --project /_lock \
@@ -82,7 +81,6 @@ RUN --mount=type=cache,target=/root/.cache <<EOT
         --no-install-project \
         --no-dev \
 EOT
-# Install this package from built wheel
 COPY --from=build-wheel \
     "/build/dist/*-py3-none-any.whl" /build/
 RUN whl_file=$(find /build -name '*-py3-none-any.whl' -type f) \
@@ -92,7 +90,7 @@ RUN whl_file=$(find /build -name '*-py3-none-any.whl' -type f) \
 
 
 
-# Run stage will minimal dependencies required to run Python libraries
+# Run stage with minimal dependencies required to run Python libraries
 FROM base AS runtime
 ARG PYTHON_IMG_TAG
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -110,13 +108,10 @@ RUN apt-get update --quiet \
         "postgresql-client" \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
-# Copy Python deps from build to runtime
 COPY --from=build /opt/python /opt/python
 WORKDIR /data
-# Add non-root user, permissions
 RUN useradd -u 1001 -m -c "appuser" -d /home/appuser -s /bin/false appuser \
     && chown -R appuser:appuser /opt /home/appuser /data
-# Change to non-root user
 USER appuser
 
 
@@ -135,7 +130,6 @@ RUN --mount=type=cache,target=/root/.cache <<EOT
         --group test \
         --group docs
 EOT
-# Install this package from built wheel
 COPY --from=build-wheel \
     "/build/dist/*-py3-none-any.whl" /build/
 RUN whl_file=$(find /build -name '*-py3-none-any.whl' -type f) \
@@ -146,7 +140,6 @@ CMD ["bash"]
 
 
 
-FROM runtime as dist
-# Bundle the built wheel for distribution
+FROM runtime AS dist
 COPY --from=build-wheel \
     "/build/dist/*-py3-none-any.whl" /build/
